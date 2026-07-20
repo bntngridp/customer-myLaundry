@@ -95,4 +95,37 @@ class AuthRepository {
     await prefs.remove('auth_token');
     await prefs.remove('auth_user');
   }
+
+  Future<bool> forgotPassword(String email) async {
+    final response = await authService.forgotPassword(email);
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200 && body['success'] == true) {
+      return true;
+    } else {
+      final msg = body['message'] ?? 'Gagal mengirim email pemulihan sandi.';
+      throw Exception(msg);
+    }
+  }
+
+  Future<bool> verifyOtp(String email, String otp) async {
+    final response = await authService.verifyOtp(email, otp);
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200 && body['success'] == true) {
+      return true;
+    } else {
+      final msg = body['message'] ?? 'Kode verifikasi OTP salah atau kedaluwarsa.';
+      throw Exception(msg);
+    }
+  }
+
+  Future<bool> resetPassword(String email, String otp, String password) async {
+    final response = await authService.resetPassword(email, otp, password);
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200 && body['success'] == true) {
+      return true;
+    } else {
+      final msg = body['message'] ?? 'Gagal menyetel ulang kata sandi.';
+      throw Exception(msg);
+    }
+  }
 }
