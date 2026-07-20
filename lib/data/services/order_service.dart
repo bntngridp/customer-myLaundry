@@ -51,4 +51,15 @@ class OrderService {
       }),
     );
   }
+
+  Future<http.Response> getServices(String token) async {
+    final url = Uri.parse('$baseUrl/services/');
+    return await _client.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
 }

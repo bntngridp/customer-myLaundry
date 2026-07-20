@@ -5,6 +5,7 @@ import '../../auth/view_models/auth_view_model.dart';
 import '../../auth/views/login_view.dart';
 import '../view_models/home_view_model.dart';
 import 'closest_branches_view.dart';
+import 'order_bottom_sheet.dart';
 
 // HomeContainer manages bottom navigation tabs
 class HomeContainer extends StatefulWidget {
@@ -394,27 +395,37 @@ class HomeView extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: services.map((s) {
-              return Column(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: s['color'].withValues(alpha: 0.15),
+              return GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const OrderBottomSheet(),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: s['color'].withValues(alpha: 0.15),
+                      ),
+                      child: Icon(s['icon'], color: s['color'], size: 28),
                     ),
-                    child: Icon(s['icon'], color: s['color'], size: 28),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    s['label'],
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0B1739),
-                    ),
-                  )
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      s['label'],
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0B1739),
+                      ),
+                    )
+                  ],
+                ),
               );
             }).toList(),
           ),

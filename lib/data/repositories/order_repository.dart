@@ -39,4 +39,17 @@ class OrderRepository {
       throw Exception(msg);
     }
   }
+
+  Future<List<ServiceModel>> getServices(String token) async {
+    final response = await orderService.getServices(token);
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && body['success'] == true) {
+      final List<dynamic> data = body['data'] ?? [];
+      return data.map((json) => ServiceModel.fromJson(json)).toList();
+    } else {
+      final msg = body['message'] ?? 'Gagal mengambil data layanan';
+      throw Exception(msg);
+    }
+  }
 }
