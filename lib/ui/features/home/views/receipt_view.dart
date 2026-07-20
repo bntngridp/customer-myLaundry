@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'payment_confirmation_view.dart';
+import 'payment_method_view.dart';
 
 class ReceiptView extends StatelessWidget {
   const ReceiptView({super.key});
@@ -141,7 +141,7 @@ class ReceiptView extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const PaymentConfirmationView()),
+                    MaterialPageRoute(builder: (context) => const PaymentMethodView()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
