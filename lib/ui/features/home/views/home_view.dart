@@ -6,6 +6,7 @@ import '../../auth/views/login_view.dart';
 import '../view_models/home_view_model.dart';
 import 'closest_branches_view.dart';
 import 'order_bottom_sheet.dart';
+import 'active_order_view.dart';
 
 // HomeContainer manages bottom navigation tabs
 class HomeContainer extends StatefulWidget {
@@ -215,36 +216,46 @@ class HomeView extends StatelessWidget {
           const SizedBox(height: 24),
           
           // Floating Status Card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: statusData['color'],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    statusData['text'],
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0B1739),
+          GestureDetector(
+            onTap: viewModel.activeOrder == null
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ActiveOrderView()),
+                    );
+                  },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: statusData['color'],
                     ),
                   ),
-                ),
-                if (viewModel.activeOrder != null)
-                  const Icon(Icons.arrow_forward_ios, color: Colors.black26, size: 14),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      statusData['text'],
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0B1739),
+                      ),
+                    ),
+                  ),
+                  if (viewModel.activeOrder != null)
+                    const Icon(Icons.arrow_forward_ios, color: Colors.black26, size: 14),
+                ],
+              ),
             ),
           )
         ],
