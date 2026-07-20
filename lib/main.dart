@@ -1,7 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'data/services/auth_service.dart';
+import 'data/repositories/auth_repository.dart';
+import 'ui/features/auth/view_models/auth_view_model.dart';
+import 'ui/features/onboarding/views/onboarding_view.dart';
+import 'ui/features/auth/views/login_view.dart';
 
-void main() {
-  runApp(const CustomerApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final authService = AuthService();
+  final authRepository = AuthRepository(authService: authService);
+
+  // Initialize stored session locally
+  await authRepository.init();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<AuthService>.value(value: authService),
+        Provider<AuthRepository>.value(value: authRepository),
+        ChangeNotifierProvider<AuthViewModel>(
+          create: (_) => AuthViewModel(authRepository: authRepository),
+        ),
+      ],
+      child: const CustomerApp(),
+    ),
+  );
 }
 
 class CustomerApp extends StatelessWidget {
@@ -9,6 +34,8 @@ class CustomerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authRepository = Provider.of<AuthRepository>(context, listen: false);
+
     return MaterialApp(
       title: 'myLaundry Customer',
       debugShowCheckedModeBanner: false,
@@ -22,7 +49,7 @@ class CustomerApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
-      home: const CustomerHome(),
+      home: authRepository.isAuthenticated ? const CustomerHome() : const OnboardingView(),
     );
   }
 }
@@ -32,6 +59,9 @@ class CustomerHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    final user = authViewModel.authRepository.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -40,6 +70,21 @@ class CustomerHome extends StatelessWidget {
         ),
         backgroundColor: const Color(0xFF0007B0),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await authViewModel.logout();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginView()),
+                  (route) => false,
+                );
+              }
+            },
+          )
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -54,10 +99,10 @@ class CustomerHome extends StatelessWidget {
                 color: Color(0xFF0007B0),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Bersih, Cepat, dan Wangi! ✨',
+              Text(
+                'Selamat Datang, ${user?.username ?? "Pelanggan"}! 👋',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0B1739),
@@ -77,7 +122,7 @@ class CustomerHome extends StatelessWidget {
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Halaman pendaftaran / masuk segera hadir! 🧺'),
+                      content: Text('Layanan cucian segera hadir! 🧺'),
                     ),
                   );
                 },
@@ -90,7 +135,7 @@ class CustomerHome extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Mulai Sekarang',
+                  'Buat Pesanan Baru',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
