@@ -128,4 +128,48 @@ class AuthRepository {
       throw Exception(msg);
     }
   }
+
+  Future<void> updateProfile({
+    required String username,
+    required String email,
+    String? password,
+  }) async {
+    if (_token == null || _currentUser == null) return;
+
+    final response = await authService.updateCustomer(
+      id: _currentUser!.id,
+      username: username,
+      email: email,
+      password: password,
+      token: _token!,
+    );
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      // Re-fetch me to update local currentUser cache
+      final updatedUser = await getMe();
+      if (updatedUser != null) {
+        _currentUser = updatedUser;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_user', jsonEncode(updatedUser.toJson()));
+      }
+    } else {
+      final msg = body['message'] ?? 'Gagal memperbarui profil';
+      throw Exception(msg);
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    if (_token == null || _currentUser == null) return;
+
+    final response = await authService.deleteCustomer(_currentUser!.id, _token!);
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      await logout();
+    } else {
+      final msg = body['message'] ?? 'Gagal menghapus akun';
+      throw Exception(msg);
+    }
+  }
 }

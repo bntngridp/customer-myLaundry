@@ -9,6 +9,7 @@ import 'data/repositories/address_repository.dart';
 import 'ui/features/auth/view_models/auth_view_model.dart';
 import 'ui/features/home/view_models/home_view_model.dart';
 import 'ui/features/home/view_models/order_view_model.dart';
+import 'ui/features/profile/view_models/profile_view_model.dart';
 import 'ui/features/home/views/home_view.dart';
 import 'ui/features/onboarding/views/onboarding_view.dart';
 
@@ -51,6 +52,9 @@ void main() async {
             addressRepository: addressRepository,
             orderRepository: orderRepository,
           ),
+        ),
+        ChangeNotifierProvider<ProfileViewModel>(
+          create: (_) => ProfileViewModel(authRepository: authRepository),
         ),
       ],
       child: const CustomerApp(),

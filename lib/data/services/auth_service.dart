@@ -95,4 +95,37 @@ class AuthService {
       }),
     );
   }
+
+  Future<http.Response> updateCustomer({
+    required int id,
+    required String username,
+    required String email,
+    String? password,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/customers/$id');
+    return await _client.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'username': username,
+        'email': email,
+        if (password != null && password.isNotEmpty) 'password': password,
+      }),
+    );
+  }
+
+  Future<http.Response> deleteCustomer(int id, String token) async {
+    final url = Uri.parse('$baseUrl/customers/$id');
+    return await _client.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
 }

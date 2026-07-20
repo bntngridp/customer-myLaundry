@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../auth/view_models/auth_view_model.dart';
-import '../../auth/views/login_view.dart';
+import '../../profile/views/profile_view.dart';
 import '../view_models/home_view_model.dart';
 import 'closest_branches_view.dart';
 import 'order_bottom_sheet.dart';
@@ -32,7 +32,7 @@ class _HomeContainerState extends State<HomeContainer> {
     final List<Widget> pages = [
       const HomeView(),
       const _MockBasketView(),
-      const _MockProfileView(),
+      const ProfileView(),
     ];
 
     return Scaffold(
@@ -579,41 +579,6 @@ class _MockBasketView extends StatelessWidget {
     return const Scaffold(
       body: Center(
         child: Text('Keranjang Belanja 🧺', style: TextStyle(fontSize: 18, color: Colors.black54)),
-      ),
-    );
-  }
-}
-
-class _MockProfileView extends StatelessWidget {
-  const _MockProfileView();
-
-  @override
-  Widget build(BuildContext context) {
-    final authViewModel = Provider.of<AuthViewModel>(context);
-
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Profil Pelanggan 👤', style: TextStyle(fontSize: 18, color: Colors.black54)),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () async {
-                await authViewModel.logout();
-                if (context.mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginView()),
-                    (route) => false,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-              child: const Text('Keluar (Logout)'),
-            )
-          ],
-        ),
       ),
     );
   }
