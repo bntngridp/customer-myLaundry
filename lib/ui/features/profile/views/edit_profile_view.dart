@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../auth/views/login_view.dart';
 import '../view_models/profile_view_model.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -296,9 +295,9 @@ class ConfirmDeleteAccountView extends StatelessWidget {
                     : () async {
                         final success = await viewModel.deleteAccount();
                         if (success && context.mounted) {
-                          Navigator.pushAndRemoveUntil(
+                          Navigator.pushNamedAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => const LoginView()),
+                            '/login',
                             (route) => false,
                           );
                         } else if (context.mounted && viewModel.errorMessage != null) {

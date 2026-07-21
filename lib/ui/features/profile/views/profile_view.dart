@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../auth/views/login_view.dart';
 import '../view_models/profile_view_model.dart';
 import 'edit_profile_view.dart';
 import 'promo_list_view.dart';
@@ -349,9 +348,9 @@ class LogoutConfirmationDialog extends StatelessWidget {
               onPressed: () async {
                 await Provider.of<ProfileViewModel>(context, listen: false).authRepository.logout();
                 if (context.mounted) {
-                  Navigator.pushAndRemoveUntil(
+                  Navigator.pushNamedAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginView()),
+                    '/login',
                     (route) => false,
                   );
                 }

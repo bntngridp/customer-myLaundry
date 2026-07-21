@@ -13,6 +13,8 @@ import 'ui/features/profile/view_models/profile_view_model.dart';
 import 'ui/features/home/views/home_view.dart';
 import 'ui/features/onboarding/views/onboarding_view.dart';
 
+import 'ui/features/auth/views/login_view.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -83,6 +85,9 @@ class CustomerApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
       home: authRepository.isAuthenticated ? const HomeContainer() : const OnboardingView(),
+      routes: {
+        '/login': (context) => const LoginView(),
+      },
     );
   }
 }
