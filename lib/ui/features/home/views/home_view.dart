@@ -7,6 +7,7 @@ import '../view_models/home_view_model.dart';
 import 'closest_branches_view.dart';
 import 'order_bottom_sheet.dart';
 import 'active_order_view.dart';
+import 'return_delivery_view.dart';
 
 // HomeContainer manages bottom navigation tabs
 class HomeContainer extends StatefulWidget {
@@ -220,10 +221,18 @@ class HomeView extends StatelessWidget {
             onTap: viewModel.activeOrder == null
                 ? null
                 : () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ActiveOrderView()),
-                    );
+                    final status = viewModel.activeOrder!.status.toLowerCase();
+                    if (status == 'returning' || status == 'delivering') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ReturnDeliveryView()),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ActiveOrderView()),
+                      );
+                    }
                   },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

@@ -133,6 +133,7 @@ class HomeViewModel extends ChangeNotifier {
           'text': 'Menunggu pembayaran',
           'color': const Color(0xFFEAB308), // Yellow indicator
         };
+      case 'returning':
       case 'delivering':
         return {
           'text': 'Kurir dalam perjalanan mengantar pakaianmu',
@@ -149,5 +150,10 @@ class HomeViewModel extends ChangeNotifier {
           'color': const Color(0xFFEAB308), // Yellow indicator
         };
     }
+  }
+
+  void clearActiveOrder() {
+    _activeOrder = null;
+    notifyListeners();
   }
 }
