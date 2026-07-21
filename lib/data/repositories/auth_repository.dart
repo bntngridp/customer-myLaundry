@@ -80,7 +80,7 @@ class AuthRepository {
     final response = await authService.getMe(_token!);
     final body = jsonDecode(response.body);
 
-    if (response.statusCode == 200 && body['status'] == 'success') {
+    if (response.statusCode == 200 && (body['status'] == 'success' || body['success'] == true)) {
       final data = body['data'];
       return User.fromJson(data);
     } else {
