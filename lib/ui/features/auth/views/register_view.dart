@@ -58,10 +58,8 @@ class _RegisterViewState extends State<RegisterView> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFE6F0FF),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0B1739)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         title: const Text(
           'Daftar Akun',
           style: TextStyle(
@@ -362,6 +360,29 @@ class _RegisterViewState extends State<RegisterView> {
                                 ),
                               ),
                               TextSpan(text: ' berlaku.'),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Already have an account link
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Text.rich(
+                          TextSpan(
+                            text: 'Sudah punya akun? ',
+                            style: TextStyle(fontSize: 12, color: Colors.black54),
+                            children: [
+                              TextSpan(
+                                text: 'Masuk disini',
+                                style: TextStyle(
+                                  color: Color(0xFF0007B0),
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
                             ],
                           ),
                           textAlign: TextAlign.center,
