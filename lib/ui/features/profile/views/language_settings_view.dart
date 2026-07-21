@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../view_models/profile_view_model.dart';
+import '../../auth/view_models/auth_view_model.dart';
 
 class LanguageSettingsView extends StatelessWidget {
   const LanguageSettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<ProfileViewModel>(context);
+    final authViewModel = Provider.of<AuthViewModel>(context);
+    final selectedLang = authViewModel.currentLanguage;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -18,9 +19,9 @@ class LanguageSettingsView extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF0B1739)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Bahasa',
-          style: TextStyle(color: Color(0xFF0B1739), fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          authViewModel.translate('Bahasa'),
+          style: const TextStyle(color: Color(0xFF0B1739), fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
       ),
@@ -29,9 +30,9 @@ class LanguageSettingsView extends StatelessWidget {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              _buildLanguageItem(context, 'Bahasa Indonesia', viewModel),
+              _buildLanguageItem(context, 'id', 'Bahasa Indonesia', selectedLang, authViewModel),
               const SizedBox(height: 16),
-              _buildLanguageItem(context, 'English', viewModel),
+              _buildLanguageItem(context, 'en', 'English', selectedLang, authViewModel),
             ],
           ),
         ),
@@ -39,10 +40,16 @@ class LanguageSettingsView extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageItem(BuildContext context, String lang, ProfileViewModel viewModel) {
-    final isSelected = viewModel.currentLanguage == lang;
+  Widget _buildLanguageItem(
+    BuildContext context,
+    String lang,
+    String title,
+    String selectedLang,
+    AuthViewModel authViewModel,
+  ) {
+    final isSelected = selectedLang == lang;
     return GestureDetector(
-      onTap: () => viewModel.setLanguage(lang),
+      onTap: () => authViewModel.setLanguage(lang),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
@@ -54,7 +61,7 @@ class LanguageSettingsView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              lang,
+              title,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

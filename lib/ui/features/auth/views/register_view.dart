@@ -60,9 +60,9 @@ class _RegisterViewState extends State<RegisterView> {
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: true,
-        title: const Text(
-          'Daftar Akun',
-          style: TextStyle(
+        title: Text(
+          viewModel.translate('Daftar Akun'),
+          style: const TextStyle(
             color: Color(0xFF0B1739),
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -150,7 +150,7 @@ class _RegisterViewState extends State<RegisterView> {
                         textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF0007B0), size: 20),
-                          hintText: 'Nama Pengguna',
+                          hintText: viewModel.translate('Nama Pengguna'),
                           hintStyle: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.normal),
                           filled: true,
                           fillColor: const Color(0xFFF8F9FA),
@@ -235,7 +235,7 @@ class _RegisterViewState extends State<RegisterView> {
                               });
                             },
                           ),
-                          hintText: 'Kata Sandi Baru',
+                          hintText: viewModel.translate('Kata Sandi Baru'),
                           hintStyle: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.normal),
                           filled: true,
                           fillColor: const Color(0xFFF8F9FA),
@@ -284,18 +284,18 @@ class _RegisterViewState extends State<RegisterView> {
                                 width: 20,
                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
-                            : const Text(
-                                'Daftar',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            : Text(
+                                viewModel.translate('Daftar'),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                               ),
                       ),
                       const SizedBox(height: 24),
 
                       // Or register with Google label
-                      const Center(
+                      Center(
                         child: Text(
-                          'Atau daftar dengan',
-                          style: TextStyle(
+                          viewModel.translate('Atau daftar dengan'),
+                          style: const TextStyle(
                             fontSize: 11,
                             color: Colors.black38,
                           ),
@@ -370,14 +370,14 @@ class _RegisterViewState extends State<RegisterView> {
                       // Already have an account link
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: const Text.rich(
+                        child: Text.rich(
                           TextSpan(
-                            text: 'Sudah punya akun? ',
-                            style: TextStyle(fontSize: 12, color: Colors.black54),
+                            text: viewModel.translate('Sudah punya akun? '),
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
                             children: [
                               TextSpan(
-                                text: 'Masuk disini',
-                                style: TextStyle(
+                                text: viewModel.translate('Masuk disini'),
+                                style: const TextStyle(
                                   color: Color(0xFF0007B0),
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,

@@ -134,10 +134,10 @@ class _LoginViewState extends State<LoginView> {
                       const SizedBox(height: 36),
 
                       // Welcome Text
-                      const Text(
-                        'Masuk',
+                      Text(
+                        viewModel.translate('Masuk'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0B1739),
@@ -153,7 +153,7 @@ class _LoginViewState extends State<LoginView> {
                         style: const TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF0B1739), fontSize: 14),
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF0007B0), size: 20),
-                          hintText: 'Email atau Nomor Telepon',
+                          hintText: viewModel.translate('Email atau Nomor Telepon'),
                           hintStyle: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.normal),
                           filled: true,
                           fillColor: const Color(0xFFF8F9FA),
@@ -200,7 +200,7 @@ class _LoginViewState extends State<LoginView> {
                               });
                             },
                           ),
-                          hintText: 'Kata Sandi',
+                          hintText: viewModel.translate('Kata Sandi'),
                           hintStyle: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.normal),
                           filled: true,
                           fillColor: const Color(0xFFF8F9FA),
@@ -235,14 +235,14 @@ class _LoginViewState extends State<LoginView> {
                             MaterialPageRoute(builder: (context) => const ForgotPasswordView()),
                           );
                         },
-                        child: const Text.rich(
+                        child: Text.rich(
                           TextSpan(
-                            text: 'Kamu lupa password? ',
-                            style: TextStyle(fontSize: 12, color: Colors.black54),
+                            text: viewModel.translate('Kamu lupa password? '),
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
                             children: [
                               TextSpan(
-                                text: 'klik disini',
-                                style: TextStyle(
+                                text: viewModel.translate('klik disini'),
+                                style: const TextStyle(
                                   color: Color(0xFF0007B0),
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,
@@ -274,9 +274,9 @@ class _LoginViewState extends State<LoginView> {
                                 width: 20,
                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
-                            : const Text(
-                                'Masuk',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            : Text(
+                                viewModel.translate('Masuk'),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                               ),
                       ),
                       const SizedBox(height: 20),
@@ -289,14 +289,14 @@ class _LoginViewState extends State<LoginView> {
                             MaterialPageRoute(builder: (context) => const RegisterView()),
                           );
                         },
-                        child: const Text.rich(
+                        child: Text.rich(
                           TextSpan(
-                            text: 'Belum punya akun? ',
-                            style: TextStyle(fontSize: 12, color: Colors.black54),
+                            text: viewModel.translate('Belum punya akun? '),
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
                             children: [
                               TextSpan(
-                                text: 'Yuk Daftar',
-                                style: TextStyle(
+                                text: viewModel.translate('Yuk Daftar'),
+                                style: const TextStyle(
                                   color: Color(0xFF0007B0),
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,

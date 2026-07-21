@@ -6,7 +6,6 @@ class ProfileViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
-  String _currentLanguage = 'Bahasa Indonesia';
 
   final List<Map<String, String>> _loginHistory = [
     {
@@ -25,13 +24,7 @@ class ProfileViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  String get currentLanguage => _currentLanguage;
   List<Map<String, String>> get loginHistory => _loginHistory;
-
-  void setLanguage(String lang) {
-    _currentLanguage = lang;
-    notifyListeners();
-  }
 
   Future<bool> updateProfile({required String username, required String email}) async {
     _isLoading = true;
