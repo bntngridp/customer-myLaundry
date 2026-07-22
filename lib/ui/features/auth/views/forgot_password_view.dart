@@ -67,13 +67,11 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFE6F0FF),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0B1739)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Lupa Password',
-          style: TextStyle(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: Text(
+          viewModel.translate('Lupa Password'),
+          style: const TextStyle(
             color: Color(0xFF0B1739),
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -133,10 +131,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                       const SizedBox(height: 24),
 
                       // Title
-                      const Text(
-                        'Lupa Kata Sandi?',
+                      Text(
+                        viewModel.translate('Lupa Kata Sandi?'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF0B1739),
@@ -145,10 +143,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                       const SizedBox(height: 12),
 
                       // Description
-                      const Text(
-                        'Masukkan alamat email terdaftar Anda untuk menerima kode verifikasi OTP.',
+                      Text(
+                        viewModel.translate('Masukkan alamat email terdaftar Anda untuk menerima kode verifikasi OTP.'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
                           height: 1.4,
@@ -163,7 +161,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                         textInputAction: TextInputAction.done,
                         style: const TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF0B1739), fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: 'Masukkan alamat email Anda',
+                          hintText: viewModel.translate('Masukkan alamat email Anda'),
                           hintStyle: const TextStyle(color: Colors.black38, fontWeight: FontWeight.normal, fontSize: 13),
                           prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF0007B0), size: 20),
                           suffixIcon: _showClearButton
@@ -206,8 +204,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                         onPressed: viewModel.isLoading ? null : _handleSubmit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0007B0),
+                          foregroundColor: Colors.white,
                           disabledBackgroundColor: const Color(0xFF0007B0).withValues(alpha: 0.6),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          minimumSize: const Size(double.infinity, 56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -222,14 +221,37 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
-                                'Kirim Kode Verifikasi',
-                                style: TextStyle(
+                            : Text(
+                                viewModel.translate('Kirim Kode Verifikasi'),
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
                               ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Remember password link
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Text.rich(
+                          TextSpan(
+                            text: viewModel.translate('Sudah ingat kata sandi? '),
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            children: [
+                              TextSpan(
+                                text: viewModel.translate('Masuk disini'),
+                                style: const TextStyle(
+                                  color: Color(0xFF0007B0),
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ],
                   ),
