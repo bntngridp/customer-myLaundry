@@ -165,7 +165,49 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 24),
+
+                if (viewModel.errorMessage != null && viewModel.errorMessage!.isNotEmpty) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFCA5A5)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.priority_high_rounded,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            viewModel.errorMessage!,
+                            style: const TextStyle(
+                              color: Color(0xFF991B1B),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 // Verify Button
                 ElevatedButton(

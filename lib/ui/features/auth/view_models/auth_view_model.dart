@@ -112,6 +112,38 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _translateError(String err) {
+    final lower = err.toLowerCase();
+    if (lower.contains('uppercase')) {
+      return translate('Kata sandi harus mengandung minimal 1 huruf besar (A-Z)');
+    }
+    if (lower.contains('lowercase')) {
+      return translate('Kata sandi harus mengandung minimal 1 huruf kecil (a-z)');
+    }
+    if (lower.contains('number') || lower.contains('digit')) {
+      return translate('Kata sandi harus mengandung minimal 1 angka (0-9)');
+    }
+    if (lower.contains('special character')) {
+      return translate('Kata sandi harus mengandung minimal 1 karakter spesial (!, @, #, \$, dll.)');
+    }
+    if (lower.contains('at least 8 characters') || lower.contains('minimal 8')) {
+      return translate('Kata sandi minimal harus 8 karakter');
+    }
+    if (lower.contains('invalid email or password') || lower.contains('invalid credentials') || lower.contains('unauthorized')) {
+      return translate('Email atau kata sandi tidak sesuai');
+    }
+    if (lower.contains('user not found') || lower.contains('record not found')) {
+      return translate('Pengguna tidak ditemukan');
+    }
+    if (lower.contains('already exists') || lower.contains('already registered')) {
+      return translate('Email sudah terdaftar');
+    }
+    if (lower.contains('otp')) {
+      return translate('Kode OTP tidak valid atau sudah kadaluarsa');
+    }
+    return translate(err);
+  }
+
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -126,7 +158,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _translateError(e.toString().replaceAll('Exception: ', ''));
       _isLoading = false;
       notifyListeners();
       return false;
@@ -155,7 +187,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _translateError(e.toString().replaceAll('Exception: ', ''));
       _isLoading = false;
       notifyListeners();
       return false;
@@ -179,7 +211,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return success;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _translateError(e.toString().replaceAll('Exception: ', ''));
       _isLoading = false;
       notifyListeners();
       return false;
@@ -206,7 +238,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return success;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _translateError(e.toString().replaceAll('Exception: ', ''));
       _isLoading = false;
       notifyListeners();
       return false;
@@ -230,7 +262,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return success;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _translateError(e.toString().replaceAll('Exception: ', ''));
       _isLoading = false;
       notifyListeners();
       return false;
