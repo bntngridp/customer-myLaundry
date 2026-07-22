@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'data/services/auth_service.dart';
 import 'data/repositories/auth_repository.dart';
@@ -81,6 +82,9 @@ class CustomerApp extends StatelessWidget {
           primary: const Color(0xFF0007B0),
           secondary: const Color(0xFF0B1739),
           surface: const Color(0xFFF8F9FA),
+        ),
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(
+          ThemeData.light().textTheme,
         ),
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       ),
