@@ -6,16 +6,16 @@ import 'package:http/http.dart' as http;
 class AuthService {
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost:8085/api';
+      return 'http://localhost:8083/api';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.0.2.2:8085/api';
+        return 'http://10.0.2.2:8083/api';
       }
     } catch (_) {
       // Platform check can fail in web unit tests
     }
-    return 'http://localhost:8085/api';
+    return 'http://localhost:8083/api';
   }
 
   final http.Client _client;
