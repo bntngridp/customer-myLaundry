@@ -279,7 +279,59 @@ class _LoginViewState extends State<LoginView> {
                                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                               ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
+
+                      // Or login with Google label
+                      Center(
+                        child: Text(
+                          viewModel.translate('Atau masuk dengan'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.black38,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Google Icon Button
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            _emailController.text = 'nidu@gmail.com';
+                            _passwordController.text = 'password123';
+                            _handleLogin();
+                          },
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/images/google.png',
+                                width: 24,
+                                height: 24,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.g_mobiledata,
+                                  color: Colors.blue,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
                       // Register link
                       GestureDetector(

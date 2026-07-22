@@ -327,10 +327,10 @@ class _RegisterViewState extends State<RegisterView> {
                               ],
                             ),
                             child: Center(
-                              child: Image.network(
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
-                                width: 20,
-                                height: 20,
+                              child: Image.asset(
+                                'assets/images/google.png',
+                                width: 24,
+                                height: 24,
                                 errorBuilder: (context, error, stackTrace) => const Icon(
                                   Icons.g_mobiledata,
                                   color: Colors.blue,

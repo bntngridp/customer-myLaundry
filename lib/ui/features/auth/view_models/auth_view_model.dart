@@ -63,6 +63,8 @@ class AuthViewModel extends ChangeNotifier {
       'Sudah punya akun? ': 'Already have an account? ',
       'Sudah ingat kata sandi? ': 'Remember password? ',
       'Masuk disini': 'Login here',
+      'Atau masuk dengan': 'Or login with',
+      'Atau daftar dengan': 'Or register with',
       'Bahasa': 'Language',
       'Keamanan': 'Security',
       'Keluar': 'Logout',
