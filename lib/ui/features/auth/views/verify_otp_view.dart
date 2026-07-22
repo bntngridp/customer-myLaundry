@@ -11,8 +11,8 @@ class VerifyOtpView extends StatefulWidget {
 }
 
 class _VerifyOtpViewState extends State<VerifyOtpView> {
-  final List<TextEditingController> _controllers = List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   @override
   void dispose() {
@@ -39,15 +39,12 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0B1739)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Kode Verifikasi',
-          style: TextStyle(color: Color(0xFF0B1739), fontWeight: FontWeight.bold, fontSize: 18),
-        ),
+        automaticallyImplyLeading: false,
         centerTitle: true,
+        title: Text(
+          viewModel.translate('Kode Verifikasi'),
+          style: const TextStyle(color: Color(0xFF0B1739), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -60,18 +57,18 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                 // Laptop & flying emails illustration painter
                 Center(
                   child: SizedBox(
-                    width: 200,
-                    height: 180,
+                    width: 180,
+                    height: 150,
                     child: CustomPaint(
                       painter: _EmailFlyingPainter(),
                     ),
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
 
                 Text.rich(
                   TextSpan(
-                    text: 'Masukkan 4 digit kode yang dikirimkan ke\n',
+                    text: viewModel.translate('Masukkan 6 digit kode OTP yang dikirimkan ke\n'),
                     style: const TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
                     children: [
                       TextSpan(
@@ -85,15 +82,16 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
 
-                // 4 OTP Boxes
+                // 6 OTP Boxes
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(4, (index) {
-                    return SizedBox(
-                      width: 64,
-                      height: 64,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(6, (index) {
+                    return Container(
+                      width: 46,
+                      height: 54,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
                       child: TextField(
                         controller: _controllers[index],
                         focusNode: _focusNodes[index],
@@ -101,7 +99,7 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                         textAlign: TextAlign.center,
                         maxLength: 1,
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0007B0),
                         ),
@@ -109,17 +107,18 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                           counterText: '',
                           filled: true,
                           fillColor: const Color(0xFFE6F0FF),
+                          contentPadding: EdgeInsets.zero,
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: Colors.transparent),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: Color(0xFF0007B0), width: 2),
                           ),
                         ),
                         onChanged: (value) {
-                          if (value.isNotEmpty && index < 3) {
+                          if (value.isNotEmpty && index < 5) {
                             _focusNodes[index + 1].requestFocus();
                           }
                           if (value.isEmpty && index > 0) {
@@ -131,15 +130,15 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                     );
                   }),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
 
                 // Resend OTP Link
                 Center(
                   child: Column(
                     children: [
-                      const Text(
-                        'Kode belum masuk?',
-                        style: TextStyle(fontSize: 12, color: Colors.black38),
+                      Text(
+                        viewModel.translate('Kode belum masuk?'),
+                        style: const TextStyle(fontSize: 12, color: Colors.black38),
                       ),
                       const SizedBox(height: 4),
                       GestureDetector(
@@ -154,9 +153,9 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                             );
                           }
                         },
-                        child: const Text(
-                          'Kirim Ulang',
-                          style: TextStyle(
+                        child: Text(
+                          viewModel.translate('Kirim Ulang'),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFF0007B0),
                             fontWeight: FontWeight.bold,
@@ -166,11 +165,11 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 36),
 
                 // Verify Button
                 ElevatedButton(
-                  onPressed: viewModel.isLoading || _getOtpString().length != 4
+                  onPressed: viewModel.isLoading || _getOtpString().length != 6
                       ? null
                       : () async {
                           final success = await viewModel.submitVerifyOtp(_getOtpString());
@@ -203,9 +202,9 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                           width: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text(
-                          'Verifikasi',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      : Text(
+                          viewModel.translate('Verifikasi'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
               ],

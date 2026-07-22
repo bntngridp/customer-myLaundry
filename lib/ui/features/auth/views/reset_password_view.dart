@@ -25,15 +25,12 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0B1739)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Sandi Baru',
-          style: TextStyle(color: Color(0xFF0B1739), fontWeight: FontWeight.bold, fontSize: 18),
-        ),
+        automaticallyImplyLeading: false,
         centerTitle: true,
+        title: Text(
+          viewModel.translate('Sandi Baru'),
+          style: const TextStyle(color: Color(0xFF0B1739), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

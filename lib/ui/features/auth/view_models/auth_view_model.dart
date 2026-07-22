@@ -192,8 +192,8 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (otp.length != 4) {
-        throw Exception('Kode OTP harus terdiri dari 4 digit.');
+      if (otp.length != 6) {
+        throw Exception('Kode OTP harus terdiri dari 6 digit.');
       }
       if (_emailForReset == null) {
         throw Exception('Email sesi reset tidak ditemukan.');
