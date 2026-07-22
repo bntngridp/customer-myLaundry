@@ -96,18 +96,22 @@ class _LoginViewState extends State<LoginView> {
                       Center(
                         child: Column(
                           children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFFE6F0FF),
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: const Icon(
-                                Icons.local_laundry_service,
-                                size: 36,
-                                color: Color(0xFF0007B0),
+                            Image.asset(
+                              'assets/images/logo-nobg.png',
+                              height: 75,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 75,
+                                height: 75,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFFE6F0FF),
+                                ),
+                                child: const Icon(
+                                  Icons.local_laundry_service,
+                                  size: 36,
+                                  color: Color(0xFF0007B0),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),

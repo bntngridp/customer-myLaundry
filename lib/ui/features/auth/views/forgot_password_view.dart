@@ -64,20 +64,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     final viewModel = Provider.of<AuthViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFE6F0FF),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-        title: Text(
-          viewModel.translate('Lupa Password'),
-          style: const TextStyle(
-            color: Color(0xFF0B1739),
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -111,20 +97,24 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Lock Reset Illustration Icon
+                      // Brand Logo (Splash welcome style)
                       Center(
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFFE6F0FF),
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(
-                            Icons.lock_reset,
-                            size: 40,
-                            color: Color(0xFF0007B0),
+                        child: Image.asset(
+                          'assets/images/logo-nobg.png',
+                          height: 75,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            width: 75,
+                            height: 75,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFE6F0FF),
+                            ),
+                            child: const Icon(
+                              Icons.lock_reset,
+                              size: 40,
+                              color: Color(0xFF0007B0),
+                            ),
                           ),
                         ),
                       ),

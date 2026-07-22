@@ -55,20 +55,6 @@ class _RegisterViewState extends State<RegisterView> {
     final viewModel = Provider.of<AuthViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFE6F0FF),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-        title: Text(
-          viewModel.translate('Daftar Akun'),
-          style: const TextStyle(
-            color: Color(0xFF0B1739),
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -106,18 +92,22 @@ class _RegisterViewState extends State<RegisterView> {
                       Center(
                         child: Column(
                           children: [
-                            Container(
-                              width: 70,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFFE6F0FF),
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: const Icon(
-                                Icons.local_laundry_service,
-                                size: 30,
-                                color: Color(0xFF0007B0),
+                            Image.asset(
+                              'assets/images/logo-nobg.png',
+                              height: 75,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 75,
+                                height: 75,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFFE6F0FF),
+                                ),
+                                child: const Icon(
+                                  Icons.local_laundry_service,
+                                  size: 36,
+                                  color: Color(0xFF0007B0),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
