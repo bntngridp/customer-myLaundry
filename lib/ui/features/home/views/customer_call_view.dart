@@ -85,20 +85,24 @@ class _CustomerCallViewState extends State<CustomerCallView> {
                 height: 160,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0007B0), Color(0xFF2563EB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: const Color(0xFF0007B0).withValues(alpha: 0.25),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     )
                   ],
                   border: Border.all(color: const Color(0xFFE2E8F0), width: 6),
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-                    ),
-                    fit: BoxFit.cover,
-                  ),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'S',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 64),
                 ),
               ),
             ),

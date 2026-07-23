@@ -41,10 +41,21 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         ),
         title: Row(
           children: [
-            const CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFF0007B0), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'S',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
             const SizedBox(width: 10),

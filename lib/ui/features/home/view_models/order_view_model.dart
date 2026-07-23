@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/repositories/address_repository.dart';
 import '../../../../data/repositories/order_repository.dart';
+import '../../../../data/services/location_service.dart';
 import '../../../../domain/models/order.dart';
 
 class OrderViewModel extends ChangeNotifier {
@@ -22,6 +23,9 @@ class OrderViewModel extends ChangeNotifier {
   // Finding courier loading screen toggle
   bool _isFindingCourier = false;
 
+  // Promo state
+  Map<String, dynamic>? _selectedPromo;
+
   OrderViewModel({
     required this.authRepository,
     required this.addressRepository,
@@ -36,6 +40,7 @@ class OrderViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<String> get selectedItems => _selectedItems;
   bool get isFindingCourier => _isFindingCourier;
+  Map<String, dynamic>? get selectedPromo => _selectedPromo;
 
   void toggleItem(String item) {
     if (_selectedItems.contains(item)) {
@@ -43,6 +48,19 @@ class OrderViewModel extends ChangeNotifier {
     } else {
       _selectedItems.add(item);
     }
+    notifyListeners();
+  }
+
+  void addCustomItem(String item) {
+    final trimmed = item.trim();
+    if (trimmed.isNotEmpty && !_selectedItems.contains(trimmed)) {
+      _selectedItems.add(trimmed);
+      notifyListeners();
+    }
+  }
+
+  void selectPromo(Map<String, dynamic>? promo) {
+    _selectedPromo = promo;
     notifyListeners();
   }
 
@@ -105,6 +123,74 @@ class OrderViewModel extends ChangeNotifier {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> addManualAddress({
+    required String receiverName,
+    required String phoneNumber,
+    required String streetName,
+    String? notes,
+  }) async {
+    final token = authRepository.token;
+    if (token == null) return false;
+
+    try {
+      final newAddr = await addressRepository.createAddress(
+        receiverName: receiverName,
+        phoneNumber: phoneNumber,
+        houseNumber: 'No. Manual',
+        residenceName: receiverName,
+        addressNotes: notes ?? '',
+        streetName: streetName,
+        district: 'Kota',
+        subDistrict: 'Kecamatan',
+        token: token,
+      );
+      _addresses.insert(0, newAddr);
+      _selectedAddress = newAddr;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> addGpsAddress() async {
+    final token = authRepository.token;
+    final user = authRepository.currentUser;
+    if (token == null) return false;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final locationData = await LocationService.getCurrentLocation();
+      final String resolvedAddress = locationData['address'] as String;
+
+      final gpsAddr = await addressRepository.createAddress(
+        receiverName: user?.username ?? 'Lokasi Saya (GPS Akurat)',
+        phoneNumber: '+6281234567890',
+        houseNumber: 'No. GPS',
+        residenceName: 'Posisi Akurat Saat Ini',
+        addressNotes: 'Terdeteksi otomatis via Real GPS Browser/Device',
+        streetName: resolvedAddress,
+        district: 'Bojongsoang',
+        subDistrict: 'Sukapura',
+        token: token,
+      );
+      _addresses.insert(0, gpsAddr);
+      _selectedAddress = gpsAddr;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
