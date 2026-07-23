@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../auth/view_models/auth_view_model.dart';
 import '../../profile/views/profile_view.dart';
+import '../../profile/views/promo_list_view.dart';
 import '../view_models/home_view_model.dart';
 import 'closest_branches_view.dart';
 import 'order_bottom_sheet.dart';
@@ -436,7 +437,10 @@ class HomeView extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  AppSnackBar.showInfo(context, 'Semua promo sudah ditampilkan');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PromoListView()),
+                  );
                 },
                 child: const Text(
                   'Lihat Semua',
