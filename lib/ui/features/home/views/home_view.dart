@@ -216,52 +216,61 @@ class HomeView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
-                    ),
-                    child: Center(
-                      child: Text(
-                        username.isNotEmpty ? username[0].toUpperCase() : 'U',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          username.isNotEmpty ? username[0].toUpperCase() : 'U',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Halo, $username 👋',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
-                        ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Halo, $username 👋',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Pakaian kamu sudah tumpuk nih, pesan yuk!',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Pakaian kamu sudah tumpuk nih, pesan yuk!',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),

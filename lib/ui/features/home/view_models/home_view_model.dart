@@ -18,21 +18,21 @@ class HomeViewModel extends ChangeNotifier {
       address: 'Jl. Raya Bojongsoang No. 12',
       distance: 0.2,
       rating: 4.8,
-      imageUrl: 'https://images.unsplash.com/photo-1545173168-9f1947eebd01?auto=format&fit=crop&q=80&w=300',
+      imageUrl: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?auto=format&fit=crop&q=80&w=300',
     ),
     BranchModel(
       name: 'myLaundry Sukapura',
       address: 'Jl. Sukapura Raya No. 45',
       distance: 0.9,
       rating: 4.6,
-      imageUrl: 'https://images.unsplash.com/photo-1521566652839-697aa473761a?auto=format&fit=crop&q=80&w=300',
+      imageUrl: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&q=80&w=300',
     ),
     BranchModel(
       name: 'myLaundry Kiaracondong',
       address: 'Jl. Stasiun Kiaracondong No. 8',
       distance: 2.3,
       rating: 4.7,
-      imageUrl: 'https://images.unsplash.com/photo-1489769002247-38f39c522401?auto=format&fit=crop&q=80&w=300',
+      imageUrl: 'https://images.unsplash.com/photo-1604335399105-a0c585fd810e?auto=format&fit=crop&q=80&w=300',
     ),
   ];
 

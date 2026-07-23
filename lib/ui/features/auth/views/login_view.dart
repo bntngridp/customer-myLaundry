@@ -19,6 +19,20 @@ class _LoginViewState extends State<LoginView> {
   bool _obscureText = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = Provider.of<AuthViewModel>(context, listen: false);
+      if (viewModel.isAuthenticated) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeContainer()),
+        );
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();

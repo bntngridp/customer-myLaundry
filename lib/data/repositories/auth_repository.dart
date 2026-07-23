@@ -188,6 +188,10 @@ class AuthRepository {
 
       final user = await getMe();
       if (user != null) {
+        if (user.role != 'customer') {
+          await logout();
+          throw Exception('Hanya akun pelanggan yang diperbolehkan masuk.');
+        }
         _currentUser = user;
         await prefs.setString('auth_user', jsonEncode(user.toJson()));
       }

@@ -29,8 +29,14 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
+  <!-- Cross-Origin Opener Policy for Google OAuth Popup -->
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+
   <!-- Google Sign-In Client ID -->
   <meta name="google-signin-client_id" content="283643492359-mpbkb6sbjor6frhdt6u082ssj8as48ok.apps.googleusercontent.com">
+  <!-- Google API Client (gapi) required by google_sign_in_web plugin -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <!-- Google Identity Services (GIS) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <title>customer_mylaundry</title>
