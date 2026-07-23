@@ -103,12 +103,12 @@ class OrderViewModel extends ChangeNotifier {
       // If user has no address, automatically seed/create a default address
       if (_addresses.isEmpty) {
         final defaultAddress = await addressRepository.createAddress(
-          receiverName: 'Pondok Sukses',
-          phoneNumber: '+6281234567890',
+          receiverName: user.username,
+          phoneNumber: '081234567890',
           houseNumber: 'No. 1',
-          residenceName: 'Pondok Sukses',
+          residenceName: 'Rumah',
           addressNotes: 'Dekat Telkom University',
-          streetName: 'Jl. Telekomunikasi',
+          streetName: 'Jl. Telekomunikasi No. 1',
           district: 'Bojongsoang',
           subDistrict: 'Bojongsoang',
           token: token,
@@ -196,8 +196,51 @@ class OrderViewModel extends ChangeNotifier {
 
   Future<bool> submitOrder() async {
     final token = authRepository.token;
-    if (token == null || _selectedAddress == null || _selectedService == null) {
-      _errorMessage = 'Alamat atau layanan belum dipilih';
+    final user = authRepository.currentUser;
+    if (token == null) {
+      _errorMessage = 'Sesi login berakhir, silakan login kembali';
+      notifyListeners();
+      return false;
+    }
+
+    // Auto-fallback: ensure service is selected
+    if (_selectedService == null && _services.isNotEmpty) {
+      _selectedService = _services.first;
+    }
+    if (_selectedService == null) {
+      try {
+        final fetchedServices = await orderRepository.getServices(token);
+        if (fetchedServices.isNotEmpty) {
+          _services = fetchedServices;
+          _selectedService = _services.first;
+        }
+      } catch (_) {}
+    }
+
+    // Auto-fallback: ensure address is selected
+    if (_selectedAddress == null && _addresses.isNotEmpty) {
+      _selectedAddress = _addresses.first;
+    }
+    if (_selectedAddress == null && user != null) {
+      try {
+        final newAddr = await addressRepository.createAddress(
+          receiverName: user.username,
+          phoneNumber: '081234567890',
+          houseNumber: 'No. 1',
+          residenceName: 'Rumah',
+          addressNotes: 'Lokasi Penjemputan',
+          streetName: 'Jl. Bojongsoang Raya No. 1',
+          district: 'Bojongsoang',
+          subDistrict: 'Sukapura',
+          token: token,
+        );
+        _addresses.insert(0, newAddr);
+        _selectedAddress = newAddr;
+      } catch (_) {}
+    }
+
+    if (_selectedAddress == null || _selectedService == null) {
+      _errorMessage = 'Silakan pilih alamat dan layanan terlebih dahulu';
       notifyListeners();
       return false;
     }

@@ -853,8 +853,28 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
               ),
               const SizedBox(height: 36),
 
-              // Custom swipe slider button ("Geser Untuk Pemesanan")
+              // Custom swipe slider button ("Geser atau Klik Untuk Pemesanan")
               GestureDetector(
+                onTap: () async {
+                  if (viewModel.isLoading) return;
+                  // Animate swipe to full right on tap
+                  setState(() {
+                    _swipeAlign = 1.0;
+                  });
+                  final success = await viewModel.submitOrder();
+                  if (success) {
+                    if (context.mounted) {
+                      Provider.of<HomeViewModel>(context, listen: false).checkActiveOrder();
+                    }
+                  } else {
+                    setState(() {
+                      _swipeAlign = 0.0;
+                    });
+                    if (context.mounted && viewModel.errorMessage != null) {
+                      AppSnackBar.showError(context, viewModel.errorMessage!);
+                    }
+                  }
+                },
                 onHorizontalDragUpdate: (details) {
                   if (viewModel.isLoading) return;
                   setState(() {
@@ -865,7 +885,7 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                 },
                 onHorizontalDragEnd: (details) async {
                   if (viewModel.isLoading) return;
-                  if (_swipeAlign > 0.75) {
+                  if (_swipeAlign > 0.4) {
                     setState(() {
                       _swipeAlign = 1.0;
                     });
@@ -899,7 +919,7 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                     children: [
                       Center(
                         child: Text(
-                          viewModel.isLoading ? 'Memproses Pesanan...' : 'Geser Untuk Pemesanan',
+                          viewModel.isLoading ? 'Memproses Pesanan...' : 'Geser / Klik Untuk Pemesanan',
                           style: const TextStyle(
                             color: Color(0xFF0007B0),
                             fontWeight: FontWeight.bold,
