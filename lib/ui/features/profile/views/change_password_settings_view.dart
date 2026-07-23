@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/profile_view_model.dart';
 
+import '../../../shared/widgets/app_snackbar.dart';
+
 class ChangePasswordSettingsView extends StatefulWidget {
   const ChangePasswordSettingsView({super.key});
 
@@ -94,9 +96,7 @@ class _ChangePasswordSettingsViewState extends State<ChangePasswordSettingsView>
                     ? null
                     : () async {
                         if (_newPasswordController.text != _confirmPasswordController.text) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok.'), backgroundColor: Colors.red),
-                          );
+                          AppSnackBar.showError(context, 'Konfirmasi kata sandi tidak cocok.');
                           return;
                         }
                         final success = await viewModel.changePassword(
@@ -104,14 +104,10 @@ class _ChangePasswordSettingsViewState extends State<ChangePasswordSettingsView>
                           newPassword: _newPasswordController.text,
                         );
                         if (success && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Kata sandi berhasil diperbarui! 🔑'), backgroundColor: Color(0xFF0007B0)),
-                          );
+                          AppSnackBar.showSuccess(context, 'Kata sandi berhasil diperbarui');
                           Navigator.pop(context);
                         } else if (context.mounted && viewModel.errorMessage != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(viewModel.errorMessage!), backgroundColor: Colors.red),
-                          );
+                          AppSnackBar.showError(context, viewModel.errorMessage!);
                         }
                       },
                 style: ElevatedButton.styleFrom(

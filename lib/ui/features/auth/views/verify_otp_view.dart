@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/auth_view_model.dart';
 import 'reset_password_view.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class VerifyOtpView extends StatefulWidget {
   const VerifyOtpView({super.key});
@@ -145,12 +146,7 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                         onTap: () async {
                           final success = await viewModel.sendForgotPassword(targetEmail);
                           if (success && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Kode OTP berhasil dikirim ulang! ✉️'),
-                                backgroundColor: Color(0xFF0007B0),
-                              ),
-                            );
+                            AppSnackBar.showSuccess(context, 'Kode OTP berhasil dikirim ulang');
                           }
                         },
                         child: Text(
@@ -221,12 +217,7 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                               MaterialPageRoute(builder: (context) => const ResetPasswordView()),
                             );
                           } else if (context.mounted && viewModel.errorMessage != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(viewModel.errorMessage!),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            AppSnackBar.showError(context, viewModel.errorMessage!);
                           }
                         },
                   style: ElevatedButton.styleFrom(

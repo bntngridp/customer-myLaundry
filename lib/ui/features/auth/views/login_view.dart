@@ -4,6 +4,7 @@ import '../view_models/auth_view_model.dart';
 import 'register_view.dart';
 import 'forgot_password_view.dart';
 import '../../home/views/home_view.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -47,12 +48,7 @@ class _LoginViewState extends State<LoginView> {
         _passwordController.text,
       );
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Berhasil masuk! Selamat datang di myLaundry! ✨'),
-            backgroundColor: Color(0xFF0007B0),
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Berhasil masuk! Selamat datang di myLaundry');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeContainer()),
@@ -351,17 +347,10 @@ class _LoginViewState extends State<LoginView> {
                       Center(
                         child: GestureDetector(
                           onTap: () async {
-                            final navigator = Navigator.of(context);
-                            final messenger = ScaffoldMessenger.of(context);
                             final success = await viewModel.signInWithGoogle(role: 'customer');
-                            if (success) {
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text('Berhasil masuk dengan Google! ✨'),
-                                  backgroundColor: Color(0xFF0007B0),
-                                ),
-                              );
-                              navigator.pushReplacement(
+                            if (success && context.mounted) {
+                              AppSnackBar.showSuccess(context, 'Berhasil masuk dengan Google');
+                              Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(builder: (context) => const HomeContainer()),
                               );
                             }

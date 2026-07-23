@@ -30,7 +30,7 @@ class ResetPasswordSuccessView extends StatelessWidget {
 
               // Success Text
               const Text(
-                'YEYYY 😊\nKata sandi anda telah\nberhasil diganti',
+                'Kata Sandi Berhasil Diganti\nSilakan masuk kembali',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,

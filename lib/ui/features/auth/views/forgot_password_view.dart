@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/auth_view_model.dart';
 import 'verify_otp_view.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key});
@@ -38,12 +39,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       final success = await viewModel.sendForgotPassword(email);
 
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kode OTP berhasil dikirim ke email Anda! ✨'),
-            backgroundColor: Color(0xFF0007B0),
-          ),
-        );
+        AppSnackBar.showSuccess(context, 'Kode OTP berhasil dikirim ke email Anda');
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const VerifyOtpView()),

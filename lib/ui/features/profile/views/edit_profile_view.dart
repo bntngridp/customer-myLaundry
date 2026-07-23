@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/profile_view_model.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -61,14 +62,10 @@ class _EditProfileViewState extends State<EditProfileView> {
                       email: _emailController.text,
                     );
                     if (success && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Profil berhasil diperbarui! ✨'), backgroundColor: Color(0xFF0007B0)),
-                      );
+                      AppSnackBar.showSuccess(context, 'Profil berhasil diperbarui');
                       Navigator.pop(context);
                     } else if (context.mounted && viewModel.errorMessage != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(viewModel.errorMessage!), backgroundColor: Colors.red),
-                      );
+                      AppSnackBar.showError(context, viewModel.errorMessage!);
                     }
                   },
             child: const Text(
@@ -224,7 +221,7 @@ class ConfirmDeleteAccountView extends StatelessWidget {
               const SizedBox(height: 36),
 
               const Text(
-                'Terima Kasih Telah Menjadi\nPelanggan Setia Kami 😭',
+                'Terima Kasih Telah Menjadi\nPelanggan Setia Kami',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -301,9 +298,7 @@ class ConfirmDeleteAccountView extends StatelessWidget {
                             (route) => false,
                           );
                         } else if (context.mounted && viewModel.errorMessage != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(viewModel.errorMessage!), backgroundColor: Colors.red),
-                          );
+                          AppSnackBar.showError(context, viewModel.errorMessage!);
                         }
                       },
                 child: const Text(

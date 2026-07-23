@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class PromoListView extends StatelessWidget {
   const PromoListView({super.key});
@@ -105,15 +106,7 @@ class PromoListView extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: promo['code']!));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Kode promo "${promo['code']!}" disalin ke clipboard! 🎟️',
-                                style: const TextStyle(color: Color(0xFF0007B0)),
-                              ),
-                              backgroundColor: Colors.white,
-                            ),
-                          );
+                          AppSnackBar.showSuccess(context, 'Kode promo "${promo['code']!}" berhasil disalin');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,

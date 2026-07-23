@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/notification_view_model.dart';
 import '../../../../domain/models/notification.dart';
+import '../../auth/view_models/auth_view_model.dart';
 
 class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
@@ -21,6 +22,8 @@ class _NotificationViewState extends State<NotificationView> {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -31,9 +34,9 @@ class _NotificationViewState extends State<NotificationView> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF0B1739), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Notifikasi',
-          style: TextStyle(
+        title: Text(
+          authViewModel.translate('Notifikasi'),
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0B1739),
@@ -46,9 +49,9 @@ class _NotificationViewState extends State<NotificationView> {
               if (vm.unreadCount == 0) return const SizedBox.shrink();
               return TextButton(
                 onPressed: () => vm.markAllAsRead(),
-                child: const Text(
-                  'Tandai dibaca',
-                  style: TextStyle(
+                child: Text(
+                  authViewModel.translate('Tandai dibaca'),
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF0007B0),
@@ -64,9 +67,9 @@ class _NotificationViewState extends State<NotificationView> {
         builder: (context, vm, child) {
           return Column(
             children: [
-              _buildFilterChips(vm),
+              _buildFilterChips(vm, authViewModel),
               Expanded(
-                child: _buildNotificationList(vm),
+                child: _buildNotificationList(vm, authViewModel),
               ),
             ],
           );
@@ -75,7 +78,7 @@ class _NotificationViewState extends State<NotificationView> {
     );
   }
 
-  Widget _buildFilterChips(NotificationViewModel vm) {
+  Widget _buildFilterChips(NotificationViewModel vm, AuthViewModel authViewModel) {
     final filters = ['Semua', 'Status Pesanan', 'Promo'];
 
     return Container(
@@ -88,7 +91,7 @@ class _NotificationViewState extends State<NotificationView> {
             padding: const EdgeInsets.only(right: 8.0),
             child: ChoiceChip(
               label: Text(
-                filter,
+                authViewModel.translate(filter),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -111,7 +114,7 @@ class _NotificationViewState extends State<NotificationView> {
     );
   }
 
-  Widget _buildNotificationList(NotificationViewModel vm) {
+  Widget _buildNotificationList(NotificationViewModel vm, AuthViewModel authViewModel) {
     if (vm.isLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -141,7 +144,7 @@ class _NotificationViewState extends State<NotificationView> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Coba Lagi'),
+              child: Text(authViewModel.translate('Coba Lagi')),
             ),
           ],
         ),
@@ -168,18 +171,18 @@ class _NotificationViewState extends State<NotificationView> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Belum ada notifikasi',
-              style: TextStyle(
+            Text(
+              authViewModel.translate('Belum ada notifikasi'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0B1739),
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Pemberitahuan terkini akan muncul di sini',
-              style: TextStyle(fontSize: 13, color: Colors.black45),
+            Text(
+              authViewModel.translate('Pemberitahuan terkini akan muncul di sini'),
+              style: const TextStyle(fontSize: 13, color: Colors.black45),
             ),
           ],
         ),

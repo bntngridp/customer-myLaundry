@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import 'payment_confirmation_view.dart';
 
 class PaymentMethodView extends StatefulWidget {
@@ -422,9 +423,7 @@ class _PaymentMethodViewState extends State<PaymentMethodView> {
               GestureDetector(
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: code));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('$label berhasil disalin! 📋')),
-                  );
+                  AppSnackBar.showSuccess(context, '$label berhasil disalin');
                 },
                 child: const Icon(Icons.copy, color: Color(0xFF0007B0), size: 18),
               )

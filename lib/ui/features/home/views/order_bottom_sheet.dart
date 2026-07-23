@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/order_view_model.dart';
 import '../view_models/home_view_model.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class OrderBottomSheet extends StatefulWidget {
   const OrderBottomSheet({super.key});
@@ -322,9 +323,7 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                           _swipeAlign = 0.0;
                         });
                         if (context.mounted && viewModel.errorMessage != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(viewModel.errorMessage!), backgroundColor: Colors.red),
-                          );
+                          AppSnackBar.showError(context, viewModel.errorMessage!);
                         }
                       }
                     } else {

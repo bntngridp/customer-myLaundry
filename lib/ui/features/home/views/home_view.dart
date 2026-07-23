@@ -10,6 +10,7 @@ import 'active_order_view.dart';
 import 'return_delivery_view.dart';
 import '../../notification/views/notification_view.dart';
 import '../../notification/view_models/notification_view_model.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 // HomeContainer manages bottom navigation tabs
 class HomeContainer extends StatefulWidget {
@@ -190,6 +191,7 @@ class HomeView extends StatelessWidget {
   }
 
   Widget _buildHeaderCard(BuildContext context, String username, Map<String, dynamic> statusData, HomeViewModel viewModel) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
     final hasActiveOrder = viewModel.activeOrder != null;
 
     return Container(
@@ -247,7 +249,7 @@ class HomeView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Halo, $username 👋',
+                            '${authViewModel.translate('Halo,')} $username 👋',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -258,11 +260,11 @@ class HomeView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Pakaian kamu sudah tumpuk nih, pesan yuk!',
+                          Text(
+                            authViewModel.translate('Pakaian kamu sudah tumpuk nih, pesan yuk!'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: Colors.white70,
                             ),
@@ -434,9 +436,7 @@ class HomeView extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Semua promo sudah ditampilkan! 🎟️')),
-                  );
+                  AppSnackBar.showInfo(context, 'Semua promo sudah ditampilkan');
                 },
                 child: const Text(
                   'Lihat Semua',
@@ -512,9 +512,7 @@ class HomeView extends StatelessWidget {
                         GestureDetector(
                           onTap: () {
                             Clipboard.setData(ClipboardData(text: promo['code']!));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Promo ${promo['code']} disalin! 🎟️')),
-                            );
+                            AppSnackBar.showSuccess(context, 'Kode promo ${promo['code']} berhasil disalin');
                           },
                           child: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
                         )
@@ -531,6 +529,7 @@ class HomeView extends StatelessWidget {
   }
 
   Widget _buildServicesSection(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
     final List<Map<String, dynamic>> services = [
       {
         'label': 'Jemput-Antar',
@@ -570,9 +569,9 @@ class HomeView extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Layanan Kami',
-                style: TextStyle(
+              Text(
+                authViewModel.translate('Layanan Kami'),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF0B1739),
@@ -585,9 +584,9 @@ class HomeView extends StatelessWidget {
                   color: const Color(0xFF0007B0).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  '4 Pilihan',
-                  style: TextStyle(
+                child: Text(
+                  authViewModel.translate('4 Pilihan'),
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0007B0),
@@ -676,7 +675,7 @@ class HomeView extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  s['label'],
+                                  authViewModel.translate(s['label']),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -687,7 +686,7 @@ class HomeView extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  s['subtitle'],
+                                  authViewModel.translate(s['subtitle']),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(

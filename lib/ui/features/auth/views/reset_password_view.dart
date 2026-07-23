@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/auth_view_model.dart';
 import 'reset_password_success_view.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class ResetPasswordView extends StatefulWidget {
   const ResetPasswordView({super.key});
@@ -179,12 +180,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                       ? null
                       : () async {
                           if (_passwordController.text != _confirmPasswordController.text) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Konfirmasi kata sandi tidak cocok!'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            AppSnackBar.showError(context, 'Konfirmasi kata sandi tidak cocok');
                             return;
                           }
                           final success = await viewModel.submitResetPassword(_passwordController.text);

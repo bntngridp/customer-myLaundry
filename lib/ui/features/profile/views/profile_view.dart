@@ -7,6 +7,7 @@ import 'order_history_view.dart';
 import 'security_settings_view.dart';
 import 'language_settings_view.dart';
 import 'terms_of_service_view.dart';
+import '../../auth/view_models/auth_view_model.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -149,7 +150,7 @@ class ProfileView extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // circular buttons grid options list
+              // circular buttons grid options list (Keamanan, Bahasa, Ketentuan, Keluar)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -177,22 +178,6 @@ class ProfileView extends StatelessWidget {
                   ),
                   _buildGridItem(
                     context,
-                    icon: Icons.notifications_none_outlined,
-                    label: 'Notifikasi',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fitur Notifikasi akan segera hadir! 🔔')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildGridItem(
-                    context,
                     icon: Icons.description_outlined,
                     label: 'Ketentuan',
                     onTap: () {
@@ -213,13 +198,8 @@ class ProfileView extends StatelessWidget {
                       );
                     },
                   ),
-                  // Placeholder empty grid slot for neat spacing alignment
-                  const Opacity(
-                    opacity: 0,
-                    child: SizedBox(width: 72),
-                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -228,6 +208,7 @@ class ProfileView extends StatelessWidget {
   }
 
   Widget _buildQuickButton(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -243,7 +224,7 @@ class ProfileView extends StatelessWidget {
             Icon(icon, color: const Color(0xFF0007B0), size: 20),
             const SizedBox(width: 10),
             Text(
-              label,
+              authViewModel.translate(label),
               style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0B1739), fontSize: 13),
             )
           ],
@@ -253,10 +234,11 @@ class ProfileView extends StatelessWidget {
   }
 
   Widget _buildGridItem(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 80,
+        width: 76,
         child: Column(
           children: [
             Container(
@@ -278,7 +260,7 @@ class ProfileView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              label,
+              authViewModel.translate(label),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0B1739)),
             )
@@ -294,13 +276,15 @@ class LogoutConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 380),
-        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 430),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
@@ -339,20 +323,20 @@ class LogoutConfirmationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            const Text(
-              'Konfirmasi Keluar',
+            Text(
+              authViewModel.translate('Konfirmasi Keluar'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0B1739),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Apakah kamu yakin ingin keluar dari akun myLaundry?\nKamu perlu masuk kembali nanti untuk memesan.',
+            Text(
+              authViewModel.translate('Apakah kamu yakin ingin keluar dari akun myLaundry?\nKamu perlu masuk kembali nanti untuk memesan.'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF64748B),
                 height: 1.4,
@@ -368,23 +352,23 @@ class LogoutConfirmationDialog extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: const Text(
-                      'Batal',
-                      style: TextStyle(
+                    child: Text(
+                      authViewModel.translate('Batal'),
+                      style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         color: Color(0xFF64748B),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
 
                 // Ya, Keluar (Danger Solid Red)
                 Expanded(
@@ -402,15 +386,15 @@ class LogoutConfirmationDialog extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF4444),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: const Text(
-                      'Ya, Keluar',
-                      style: TextStyle(
+                    child: Text(
+                      authViewModel.translate('Ya, Keluar'),
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
