@@ -856,6 +856,7 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
               // Custom swipe slider button ("Geser Untuk Pemesanan")
               GestureDetector(
                 onHorizontalDragUpdate: (details) {
+                  if (viewModel.isLoading) return;
                   setState(() {
                     _swipeAlign += details.primaryDelta! / 250.0;
                     if (_swipeAlign < 0.0) _swipeAlign = 0.0;
@@ -863,11 +864,13 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                   });
                 },
                 onHorizontalDragEnd: (details) async {
-                  if (_swipeAlign > 0.8) {
-                    // Trigger order submission
+                  if (viewModel.isLoading) return;
+                  if (_swipeAlign > 0.75) {
+                    setState(() {
+                      _swipeAlign = 1.0;
+                    });
                     final success = await viewModel.submitOrder();
                     if (success) {
-                      // Refresh status card in HomeView
                       if (context.mounted) {
                         Provider.of<HomeViewModel>(context, listen: false).checkActiveOrder();
                       }
@@ -894,10 +897,10 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                   ),
                   child: Stack(
                     children: [
-                      const Center(
+                      Center(
                         child: Text(
-                          'Geser Untuk Pemesanan',
-                          style: TextStyle(
+                          viewModel.isLoading ? 'Memproses Pesanan...' : 'Geser Untuk Pemesanan',
+                          style: const TextStyle(
                             color: Color(0xFF0007B0),
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -905,7 +908,7 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                         ),
                       ),
 
-                      // Sliding Circle Knob with arrow
+                      // Sliding Circle Knob with arrow or loading indicator
                       Align(
                         alignment: Alignment(_swipeAlign * 2.0 - 1.0, 0),
                         child: Container(
@@ -923,11 +926,19 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
                               )
                             ],
                           ),
-                          child: const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                          child: viewModel.isLoading
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
                         ),
                       )
                     ],
@@ -942,91 +953,186 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
     );
   }
 
-  // Searching Courier Screen Overlay View
+  // Searching Courier & Success Celebration Screen Overlay View
   Widget _buildFindingCourierScreen(BuildContext context, OrderViewModel viewModel) {
+    return _FindingCourierOverlay(
+      onClose: () {
+        viewModel.setFindingCourier(false);
+        Navigator.pop(context);
+      },
+    );
+  }
+}
+
+class _FindingCourierOverlay extends StatefulWidget {
+  final VoidCallback onClose;
+  const _FindingCourierOverlay({required this.onClose});
+
+  @override
+  State<_FindingCourierOverlay> createState() => _FindingCourierOverlayState();
+}
+
+class _FindingCourierOverlayState extends State<_FindingCourierOverlay> {
+  bool _isMatched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Simulate finding courier match after 2.5 seconds
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _isMatched = true;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Mencari Kurir...',
-                style: TextStyle(
-                  fontSize: 18,
+              Text(
+                _isMatched ? 'Pesanan Berhasil! 🎉' : 'Mencari Kurir...',
+                style: const TextStyle(
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0B1739),
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.black45),
-                onPressed: () => viewModel.setFindingCourier(false),
+                onPressed: widget.onClose,
               ),
             ],
           ),
           const Spacer(),
 
-          // Motor scooter delivery animation representation
-          SizedBox(
-            width: 180,
-            height: 180,
-            child: CustomPaint(
-              painter: _ScooterCourierPainter(),
+          if (!_isMatched) ...[
+            // Phase 1: Radar / Scooter Searching Animation
+            SizedBox(
+              width: 180,
+              height: 180,
+              child: CustomPaint(
+                painter: _ScooterCourierPainter(),
+              ),
             ),
-          ),
-          const SizedBox(height: 36),
-
-          const Text(
-            'Sedang Mencari Kurir',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0B1739),
+            const SizedBox(height: 36),
+            const Text(
+              'Sedang Mencocokkan Kurir',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0B1739),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Kami sedang mencocokkan pesanan Anda dengan kurir terdekat. Mohon tunggu sebentar...',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.black54,
-              fontSize: 14,
-              height: 1.5,
+            const SizedBox(height: 12),
+            const Text(
+              'Sistem kami sedang menghubungkan pesanan Anda dengan armada kurir terdekat. Mohon tunggu sebentar...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 14,
+                height: 1.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 36),
-
-          const CircularProgressIndicator(
-            color: Color(0xFF0007B0),
-            strokeWidth: 4,
-          ),
+            const SizedBox(height: 32),
+            const CircularProgressIndicator(
+              color: Color(0xFF0007B0),
+              strokeWidth: 4,
+            ),
+          ] else ...[
+            // Phase 2: Success Celebration Animation
+            Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFDCFCE7),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF16A34A).withValues(alpha: 0.2),
+                    blurRadius: 30,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                size: 90,
+                color: Color(0xFF16A34A),
+              ),
+            ),
+            const SizedBox(height: 36),
+            const Text(
+              'Pesanan Berhasil Dibuat!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0B1739),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Kurir terdekat telah menerima pesanan Anda dan siap menuju ke lokasi penjemputan.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
 
           const Spacer(),
 
-          ElevatedButton(
-            onPressed: () {
-              viewModel.setFindingCourier(false);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          if (_isMatched)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: widget.onClose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0007B0),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                  shadowColor: const Color(0xFF0007B0).withValues(alpha: 0.4),
+                ),
+                child: const Text(
+                  'Lihat Status Pesanan Saya',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+              ),
+            )
+          else
+            ElevatedButton(
+              onPressed: widget.onClose,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                'Batalkan Pencarian',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
-            child: const Text(
-              'Batalkan',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
           const SizedBox(height: 16),
         ],
       ),
