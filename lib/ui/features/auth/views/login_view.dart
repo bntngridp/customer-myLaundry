@@ -336,10 +336,21 @@ class _LoginViewState extends State<LoginView> {
                       // Google Icon Button
                       Center(
                         child: GestureDetector(
-                          onTap: () {
-                            _emailController.text = 'nidu@gmail.com';
-                            _passwordController.text = 'password123';
-                            _handleLogin();
+                          onTap: () async {
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
+                            final success = await viewModel.signInWithGoogle(role: 'customer');
+                            if (success) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text('Berhasil masuk dengan Google! ✨'),
+                                  backgroundColor: Color(0xFF0007B0),
+                                ),
+                              );
+                              navigator.pushReplacement(
+                                MaterialPageRoute(builder: (context) => const HomeContainer()),
+                              );
+                            }
                           },
                           child: Container(
                             width: 50,

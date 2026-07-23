@@ -174,4 +174,27 @@ class AuthRepository {
       throw Exception(msg);
     }
   }
+
+  Future<User?> googleLogin(String idToken, {String role = 'customer'}) async {
+    final response = await authService.googleLogin(idToken, role: role);
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && (body['status'] == 'success' || body['success'] == true)) {
+      final data = body['data'];
+      _token = data['token'];
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', _token!);
+
+      final user = await getMe();
+      if (user != null) {
+        _currentUser = user;
+        await prefs.setString('auth_user', jsonEncode(user.toJson()));
+      }
+      return _currentUser;
+    } else {
+      final msg = body['message'] ?? 'Google Login gagal';
+      throw Exception(msg);
+    }
+  }
 }

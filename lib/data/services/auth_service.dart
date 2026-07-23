@@ -130,4 +130,16 @@ class AuthService {
       },
     );
   }
+
+  Future<http.Response> googleLogin(String idToken, {String role = 'customer'}) async {
+    final url = Uri.parse('$baseUrl/auth/google');
+    return await _client.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id_token': idToken,
+        'role': role,
+      }),
+    );
+  }
 }
