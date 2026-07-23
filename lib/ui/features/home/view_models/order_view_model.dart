@@ -100,20 +100,23 @@ class OrderViewModel extends ChangeNotifier {
       final fetchedAddresses = await addressRepository.getAddresses(user.id, token);
       _addresses = fetchedAddresses;
 
-      // If user has no address, automatically seed/create a default address
+      // If user has no address in database, fetch real GPS location dynamically
       if (_addresses.isEmpty) {
-        final defaultAddress = await addressRepository.createAddress(
+        final locationData = await LocationService.getCurrentLocation();
+        final String resolvedAddress = locationData['address'] as String;
+
+        final realGpsAddress = await addressRepository.createAddress(
           receiverName: user.username,
           phoneNumber: '081234567890',
-          houseNumber: 'No. 1',
-          residenceName: 'Rumah',
-          addressNotes: 'Dekat Telkom University',
-          streetName: 'Jl. Telekomunikasi No. 1',
+          houseNumber: 'GPS',
+          residenceName: 'Posisi Real Terdeteksi',
+          addressNotes: 'Terdeteksi otomatis via Real GPS Browser/Device',
+          streetName: resolvedAddress,
           district: 'Bojongsoang',
-          subDistrict: 'Bojongsoang',
+          subDistrict: 'Sukapura',
           token: token,
         );
-        _addresses.add(defaultAddress);
+        _addresses.add(realGpsAddress);
       }
 
       _selectedAddress = _addresses.first;
@@ -172,9 +175,9 @@ class OrderViewModel extends ChangeNotifier {
 
       final gpsAddr = await addressRepository.createAddress(
         receiverName: user?.username ?? 'Lokasi Saya (GPS Akurat)',
-        phoneNumber: '+6281234567890',
-        houseNumber: 'No. GPS',
-        residenceName: 'Posisi Akurat Saat Ini',
+        phoneNumber: '081234567890',
+        houseNumber: 'GPS',
+        residenceName: 'Posisi Real Terdeteksi',
         addressNotes: 'Terdeteksi otomatis via Real GPS Browser/Device',
         streetName: resolvedAddress,
         district: 'Bojongsoang',
@@ -203,7 +206,7 @@ class OrderViewModel extends ChangeNotifier {
       return false;
     }
 
-    // Auto-fallback: ensure service is selected
+    // Ensure service is selected
     if (_selectedService == null && _services.isNotEmpty) {
       _selectedService = _services.first;
     }
@@ -217,25 +220,28 @@ class OrderViewModel extends ChangeNotifier {
       } catch (_) {}
     }
 
-    // Auto-fallback: ensure address is selected
+    // Ensure address is selected via Real GPS if null
     if (_selectedAddress == null && _addresses.isNotEmpty) {
       _selectedAddress = _addresses.first;
     }
     if (_selectedAddress == null && user != null) {
       try {
-        final newAddr = await addressRepository.createAddress(
+        final locationData = await LocationService.getCurrentLocation();
+        final String resolvedAddress = locationData['address'] as String;
+
+        final realGpsAddress = await addressRepository.createAddress(
           receiverName: user.username,
           phoneNumber: '081234567890',
-          houseNumber: 'No. 1',
-          residenceName: 'Rumah',
-          addressNotes: 'Lokasi Penjemputan',
-          streetName: 'Jl. Bojongsoang Raya No. 1',
+          houseNumber: 'GPS',
+          residenceName: 'Posisi Real Terdeteksi',
+          addressNotes: 'Terdeteksi otomatis via Real GPS Browser/Device',
+          streetName: resolvedAddress,
           district: 'Bojongsoang',
           subDistrict: 'Sukapura',
           token: token,
         );
-        _addresses.insert(0, newAddr);
-        _selectedAddress = newAddr;
+        _addresses.insert(0, realGpsAddress);
+        _selectedAddress = realGpsAddress;
       } catch (_) {}
     }
 
