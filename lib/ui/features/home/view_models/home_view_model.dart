@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/repositories/order_repository.dart';
+import '../../../../data/services/promo_service.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/branch.dart';
 
@@ -36,29 +38,43 @@ class HomeViewModel extends ChangeNotifier {
     ),
   ];
 
-  final List<Map<String, String>> _promos = [
-    {
-      'title': 'Dapatkan Diskon 30%',
-      'subtitle': 'Hingga Rp5000',
-      'code': 'BersihTanpaPusing',
-    },
-    {
-      'title': 'Dapatkan Diskon 50%',
-      'subtitle': 'Hingga Rp10000',
-      'code': 'CucianWangi',
-    },
-  ];
+  List<Map<String, String>> _promos = [];
 
   HomeViewModel({
     required this.authRepository,
     required this.orderRepository,
-  });
+  }) {
+    fetchPromos();
+  }
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   OrderModel? get activeOrder => _activeOrder;
   List<BranchModel> get branches => _branches;
   List<Map<String, String>> get promos => _promos;
+
+  Future<void> fetchPromos() async {
+    try {
+      final res = await PromoService().getPromos();
+      if (res.statusCode == 200) {
+        final body = json.decode(res.body);
+        if (body['success'] == true && body['data'] != null) {
+          final List list = body['data'];
+          _promos = list.map<Map<String, String>>((item) {
+            final String code = item['code'] ?? '';
+            final String title = item['title'] ?? 'Promo Diskon Special';
+            final String subtitle = item['subtitle'] ?? 'Diskon menarik untuk cucianmu';
+            return {
+              'code': code,
+              'title': title,
+              'subtitle': subtitle,
+            };
+          }).toList();
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
+  }
 
   Future<void> checkActiveOrder() async {
     final token = authRepository.token;
@@ -67,6 +83,8 @@ class HomeViewModel extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+
+    fetchPromos(); // Fetch latest active promos dynamically from DB
 
     try {
       final orders = await orderRepository.getOrders(token);
