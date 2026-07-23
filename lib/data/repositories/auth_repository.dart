@@ -57,11 +57,13 @@ class AuthRepository {
   Future<bool> register({
     required String username,
     required String email,
+    required String phoneNumber,
     required String password,
   }) async {
     final response = await authService.register(
       username: username,
       email: email,
+      phoneNumber: phoneNumber,
       password: password,
     );
     final body = jsonDecode(response.body);

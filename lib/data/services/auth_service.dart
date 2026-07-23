@@ -37,6 +37,7 @@ class AuthService {
   Future<http.Response> register({
     required String username,
     required String email,
+    required String phoneNumber,
     required String password,
   }) async {
     final url = Uri.parse('$baseUrl/auth/register');
@@ -46,6 +47,7 @@ class AuthService {
       body: jsonEncode({
         'username': username,
         'email': email,
+        'phone_number': phoneNumber,
         'password': password,
         'confirm_password': password,
         'role': 'customer',
