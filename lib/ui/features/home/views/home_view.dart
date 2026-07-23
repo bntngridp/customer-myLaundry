@@ -187,38 +187,99 @@ class HomeView extends StatelessWidget {
   }
 
   Widget _buildHeaderCard(BuildContext context, String username, Map<String, dynamic> statusData, HomeViewModel viewModel) {
+    final hasActiveOrder = viewModel.activeOrder != null;
+
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0007B0),
+        gradient: LinearGradient(
+          colors: [Color(0xFF0B1739), Color(0xFF0007B0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(36),
           bottomRight: Radius.circular(36),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x200007B0),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          )
+        ],
       ),
-      padding: const EdgeInsets.fromLTRB(24, 64, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Halo $username',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          // User Avatar + Welcome Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        username.isNotEmpty ? username[0].toUpperCase() : 'U',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Halo, $username 👋',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Pakaian kamu sudah tumpuk nih, pesan yuk!',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
+                  onPressed: () {},
+                ),
+              ),
+            ],
           ),
-          const Text(
-            'Pakaian kamu sudah tumpuk nih, pesan yuk',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           
-          // Floating Status Card
+          // Modern Active Status Card
           GestureDetector(
-            onTap: viewModel.activeOrder == null
+            onTap: !hasActiveOrder
                 ? null
                 : () {
                     final status = viewModel.activeOrder!.status.toLowerCase();
@@ -238,31 +299,67 @@ class HomeView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  )
+                ],
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 12,
-                    height: 12,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
+                      color: (statusData['color'] as Color).withValues(alpha: 0.12),
                       shape: BoxShape.circle,
-                      color: statusData['color'],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      statusData['text'],
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0B1739),
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: statusData['color'],
                       ),
                     ),
                   ),
-                  if (viewModel.activeOrder != null)
-                    const Icon(Icons.arrow_forward_ios, color: Colors.black26, size: 14),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasActiveOrder ? 'Status Pesanan Aktif' : 'Informasi Pesanan',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black45,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          statusData['text'],
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0B1739),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (hasActiveOrder)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF0007B0), size: 14),
+                    ),
                 ],
               ),
             ),
