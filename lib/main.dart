@@ -16,6 +16,10 @@ import 'ui/features/onboarding/views/onboarding_view.dart';
 
 import 'ui/features/auth/views/login_view.dart';
 
+import 'data/services/notification_service.dart';
+import 'data/repositories/notification_repository.dart';
+import 'ui/features/notification/view_models/notification_view_model.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -27,6 +31,9 @@ void main() async {
 
   final addressService = AddressService();
   final addressRepository = AddressRepository(addressService: addressService);
+
+  final notificationService = NotificationService();
+  final notificationRepository = NotificationRepository(notificationService: notificationService);
 
   // Initialize stored session locally
   await authRepository.init();
@@ -40,6 +47,8 @@ void main() async {
         Provider<OrderRepository>.value(value: orderRepository),
         Provider<AddressService>.value(value: addressService),
         Provider<AddressRepository>.value(value: addressRepository),
+        Provider<NotificationService>.value(value: notificationService),
+        Provider<NotificationRepository>.value(value: notificationRepository),
         ChangeNotifierProvider<AuthViewModel>(
           create: (_) => AuthViewModel(authRepository: authRepository),
         ),
@@ -58,6 +67,12 @@ void main() async {
         ),
         ChangeNotifierProvider<ProfileViewModel>(
           create: (_) => ProfileViewModel(authRepository: authRepository),
+        ),
+        ChangeNotifierProvider<NotificationViewModel>(
+          create: (_) => NotificationViewModel(
+            notificationRepository: notificationRepository,
+            authRepository: authRepository,
+          ),
         ),
       ],
       child: const CustomerApp(),

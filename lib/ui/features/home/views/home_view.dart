@@ -8,6 +8,8 @@ import 'closest_branches_view.dart';
 import 'order_bottom_sheet.dart';
 import 'active_order_view.dart';
 import 'return_delivery_view.dart';
+import '../../notification/views/notification_view.dart';
+import '../../notification/view_models/notification_view_model.dart';
 
 // HomeContainer manages bottom navigation tabs
 class HomeContainer extends StatefulWidget {
@@ -25,6 +27,7 @@ class _HomeContainerState extends State<HomeContainer> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HomeViewModel>(context, listen: false).checkActiveOrder();
+      Provider.of<NotificationViewModel>(context, listen: false).fetchNotifications();
     });
   }
 
@@ -271,16 +274,50 @@ class HomeView extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
-                  onPressed: () {},
-                ),
+              Consumer<NotificationViewModel>(
+                builder: (context, notifVm, child) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 22),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const NotificationView()),
+                            );
+                          },
+                        ),
+                        if (notifVm.unreadCount > 0)
+                          Positioned(
+                            right: 6,
+                            top: 6,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFF4757),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '${notifVm.unreadCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -495,67 +532,182 @@ class HomeView extends StatelessWidget {
 
   Widget _buildServicesSection(BuildContext context) {
     final List<Map<String, dynamic>> services = [
-      {'label': 'Jemput-Antar', 'icon': Icons.local_shipping, 'color': const Color(0xFFEF4444)},
-      {'label': 'Cuci Lipat', 'icon': Icons.dry_cleaning, 'color': const Color(0xFFEAB308)},
-      {'label': 'Cuci Satuan', 'icon': Icons.layers, 'color': const Color(0xFF22C55E)},
-      {'label': 'Cuci Setrika', 'icon': Icons.iron, 'color': const Color(0xFF38BDF8)},
+      {
+        'label': 'Jemput-Antar',
+        'subtitle': 'Kurir antar jemput',
+        'icon': Icons.local_shipping_rounded,
+        'gradient': [const Color(0xFFFF5E62), const Color(0xFFFF9966)],
+        'shadow': const Color(0xFFFF5E62),
+      },
+      {
+        'label': 'Cuci Lipat',
+        'subtitle': 'Bersih & terlipat',
+        'icon': Icons.dry_cleaning_rounded,
+        'gradient': [const Color(0xFFF7971E), const Color(0xFFFFD200)],
+        'shadow': const Color(0xFFF7971E),
+      },
+      {
+        'label': 'Cuci Satuan',
+        'subtitle': 'Jas, gaun, kemeja',
+        'icon': Icons.layers_rounded,
+        'gradient': [const Color(0xFF11998E), const Color(0xFF38EF7D)],
+        'shadow': const Color(0xFF11998E),
+      },
+      {
+        'label': 'Cuci Setrika',
+        'subtitle': 'Licin, wangi & rapi',
+        'icon': Icons.iron_rounded,
+        'gradient': [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
+        'shadow': const Color(0xFF00B4DB),
+      },
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            'Layanan Kami',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0B1739),
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Layanan Kami',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0B1739),
+                  letterSpacing: 0.3,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0007B0).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  '4 Pilihan',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0007B0),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: services.map((s) {
-              return GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const OrderBottomSheet(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 650;
+              final crossAxisCount = isWide ? 4 : 2;
+              final childAspectRatio = isWide ? 2.1 : 2.3;
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: 14,
+                  childAspectRatio: childAspectRatio,
+                ),
+                itemCount: services.length,
+                itemBuilder: (context, index) {
+                  final s = services[index];
+                  final List<Color> bgGradient = s['gradient'];
+
+                  return GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const OrderBottomSheet(),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (s['shadow'] as Color).withValues(alpha: 0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: bgGradient,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: bgGradient[0].withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              s['icon'],
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  s['label'],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0B1739),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  s['subtitle'],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.black45,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
-                child: Column(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: s['color'].withValues(alpha: 0.15),
-                      ),
-                      child: Icon(s['icon'], color: s['color'], size: 28),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      s['label'],
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF0B1739),
-                      ),
-                    )
-                  ],
-                ),
               );
-            }).toList(),
+            },
           ),
-        )
+        ),
       ],
     );
   }
