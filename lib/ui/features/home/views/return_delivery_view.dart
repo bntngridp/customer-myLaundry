@@ -1,21 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'return_chat_view.dart';
 import 'return_call_view.dart';
 import 'order_success_delivery_view.dart';
 
-class ReturnDeliveryView extends StatelessWidget {
+class ReturnDeliveryView extends StatefulWidget {
   const ReturnDeliveryView({super.key});
+
+  @override
+  State<ReturnDeliveryView> createState() => _ReturnDeliveryViewState();
+}
+
+class _ReturnDeliveryViewState extends State<ReturnDeliveryView> {
+  static const LatLng _outletLocation = LatLng(-6.917464, 107.619123);
+  static const LatLng _courierLocation = LatLng(-6.920100, 107.623800);
+  static const LatLng _customerLocation = LatLng(-6.921464, 107.625123);
+
+  final Set<Marker> _markers = {
+    Marker(
+      markerId: const MarkerId('outlet'),
+      position: _outletLocation,
+      infoWindow: const InfoWindow(title: 'Outlet myLaundry'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+    ),
+    Marker(
+      markerId: const MarkerId('courier'),
+      position: _courierLocation,
+      infoWindow: const InfoWindow(title: 'Surwanto (Kurir Pengantaran)'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    ),
+    Marker(
+      markerId: const MarkerId('destination'),
+      position: _customerLocation,
+      infoWindow: const InfoWindow(title: 'Lokasi Pengantaran (Rumah Anda)'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    ),
+  };
+
+  final Set<Polyline> _polylines = {
+    const Polyline(
+      polylineId: PolylineId('return_delivery_route'),
+      points: [
+        _outletLocation,
+        _courierLocation,
+        _customerLocation,
+      ],
+      color: Color(0xFF0007B0),
+      width: 4,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Road Map Visual representation using custom painter
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _RoadMapPainter(),
+          // Google Map Background
+          GoogleMap(
+            initialCameraPosition: const CameraPosition(
+              target: _courierLocation,
+              zoom: 15.0,
             ),
+            markers: _markers,
+            polylines: _polylines,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
           ),
 
           // Top Header back button
@@ -72,11 +121,11 @@ class ReturnDeliveryView extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Color(0x0A000000),
                         blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        offset: Offset(0, 8),
                       )
                     ],
                   ),
@@ -190,75 +239,4 @@ class ReturnDeliveryView extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RoadMapPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Fill background
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), Paint()..color = const Color(0xFFF1F5F9));
-
-    // Draw main boulevard/street lines representing Podomoro Boulevard
-    final streetPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 32
-      ..strokeCap = StrokeCap.round;
-
-    final dashPaint = Paint()
-      ..color = const Color(0xFFCBD5E1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Road 1: Main vertical boulevard
-    canvas.drawLine(Offset(size.width * 0.45, 0), Offset(size.width * 0.45, size.height), streetPaint);
-    // Road 2: Horizontal connection
-    canvas.drawLine(Offset(0, size.height * 0.55), Offset(size.width, size.height * 0.55), streetPaint);
-    // Road 3: Diagonal bypass
-    canvas.drawLine(Offset(size.width * 0.1, size.height * 0.2), Offset(size.width * 0.9, size.height * 0.8), streetPaint);
-
-    // Center divider dash lines
-    canvas.drawLine(Offset(size.width * 0.45, 0), Offset(size.width * 0.45, size.height), dashPaint);
-    canvas.drawLine(Offset(0, size.height * 0.55), Offset(size.width, size.height * 0.55), dashPaint);
-
-    // Text labels for landmark simulation (e.g. Oetomo Hospital)
-    const textStyle = TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold);
-    
-    // Oetomo Hospital Label
-    final textPainter1 = TextPainter(
-      text: const TextSpan(text: 'Oetomo Hospital 🏥', style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    textPainter1.paint(canvas, Offset(size.width * 0.12, size.height * 0.42));
-
-    // Bulevar Podomoro Label
-    final textPainter2 = TextPainter(
-      text: const TextSpan(text: 'Bulevar Podomoro', style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    textPainter2.paint(canvas, Offset(size.width * 0.52, size.height * 0.65));
-
-    // Draw scooter/courier dot route line representation
-    final routePaint = Paint()
-      ..color = const Color(0xFF0007B0)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(
-      Offset(size.width * 0.45, size.height * 0.55),
-      Offset(size.width * 0.45, size.height * 0.35),
-      routePaint,
-    );
-
-    // Scooter marker circle
-    final markerPaint = Paint()
-      ..color = const Color(0xFF0007B0)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(size.width * 0.45, size.height * 0.35), 8, markerPaint);
-    canvas.drawCircle(Offset(size.width * 0.45, size.height * 0.35), 14, Paint()..color = const Color(0xFF0007B0).withValues(alpha: 0.2)..style = PaintingStyle.stroke..strokeWidth = 2);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -1,14 +1,16 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/user.dart';
+import 'login_history_repository.dart';
 import '../services/auth_service.dart';
 
 class AuthRepository {
   final AuthService authService;
+  final LoginHistoryRepository? loginHistoryRepository;
   User? _currentUser;
   String? _token;
 
-  AuthRepository({required this.authService});
+  AuthRepository({required this.authService, this.loginHistoryRepository});
 
   User? get currentUser => _currentUser;
   String? get token => _token;
@@ -46,6 +48,7 @@ class AuthRepository {
         }
         _currentUser = user;
         await prefs.setString('auth_user', jsonEncode(user.toJson()));
+        await _recordLoginHistory(user);
       }
       return _currentUser;
     } else {
@@ -134,6 +137,7 @@ class AuthRepository {
   Future<void> updateProfile({
     required String username,
     required String email,
+    String? oldPassword,
     String? password,
   }) async {
     if (_token == null || _currentUser == null) return;
@@ -142,6 +146,7 @@ class AuthRepository {
       id: _currentUser!.id,
       username: username,
       email: email,
+      oldPassword: oldPassword,
       password: password,
       token: _token!,
     );
@@ -194,11 +199,45 @@ class AuthRepository {
         }
         _currentUser = user;
         await prefs.setString('auth_user', jsonEncode(user.toJson()));
+        await _recordLoginHistory(user);
       }
       return _currentUser;
     } else {
       final msg = body['message'] ?? 'Google Login gagal';
       throw Exception(msg);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getLoginHistory() async {
+    if (_token == null) return [];
+
+    try {
+      final response = await authService.getLoginHistory(_token!);
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && (body['status'] == 'success' || body['success'] == true)) {
+        final List<dynamic> list = body['data'] ?? [];
+        return list.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+    } catch (_) {
+      // Fallback cleanly on error
+    }
+    return [];
+  }
+
+  Future<void> _recordLoginHistory(User user) async {
+    final repository = loginHistoryRepository;
+    if (repository == null) {
+      return;
+    }
+
+    try {
+      await repository.recordLogin(
+        userId: user.id,
+        accountLabel: user.role == 'customer' ? 'Pelanggan' : 'Akun',
+      );
+    } catch (_) {
+      // Riwayat masuk bersifat pelengkap; kegagalannya tidak boleh memblokir login.
     }
   }
 }

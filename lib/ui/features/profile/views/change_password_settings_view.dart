@@ -95,8 +95,20 @@ class _ChangePasswordSettingsViewState extends State<ChangePasswordSettingsView>
                 onPressed: viewModel.isLoading
                     ? null
                     : () async {
+                        if (_oldPasswordController.text.trim().isEmpty) {
+                          AppSnackBar.showError(context, 'Sandi lama tidak boleh kosong');
+                          return;
+                        }
+                        if (_newPasswordController.text.isEmpty) {
+                          AppSnackBar.showError(context, 'Sandi baru tidak boleh kosong');
+                          return;
+                        }
+                        if (_newPasswordController.text.length < 6) {
+                          AppSnackBar.showError(context, 'Sandi minimal harus 6 karakter');
+                          return;
+                        }
                         if (_newPasswordController.text != _confirmPasswordController.text) {
-                          AppSnackBar.showError(context, 'Konfirmasi kata sandi tidak cocok.');
+                          AppSnackBar.showError(context, 'Konfirmasi kata sandi tidak cocok');
                           return;
                         }
                         final success = await viewModel.changePassword(

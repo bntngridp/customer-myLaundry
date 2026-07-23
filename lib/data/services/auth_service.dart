@@ -102,6 +102,7 @@ class AuthService {
     required int id,
     required String username,
     required String email,
+    String? oldPassword,
     String? password,
     required String token,
   }) async {
@@ -115,6 +116,7 @@ class AuthService {
       body: jsonEncode({
         'username': username,
         'email': email,
+        if (oldPassword != null && oldPassword.isNotEmpty) 'old_password': oldPassword,
         if (password != null && password.isNotEmpty) 'password': password,
       }),
     );
@@ -140,6 +142,17 @@ class AuthService {
         'id_token': idToken,
         'role': role,
       }),
+    );
+  }
+
+  Future<http.Response> getLoginHistory(String token) async {
+    final url = Uri.parse('$baseUrl/auth/login-history');
+    return await _client.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
   }
 }

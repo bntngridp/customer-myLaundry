@@ -91,18 +91,27 @@ class _EditProfileViewState extends State<EditProfileView> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 4),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0007B0), Color(0xFF2563EB)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: Colors.black.withValues(alpha: 0.12),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           )
                         ],
-                        image: const DecorationImage(
-                          image: NetworkImage(
-                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+                      ),
+                      child: Center(
+                        child: Text(
+                          _nameController.text.isNotEmpty ? _nameController.text[0].toUpperCase() : 'U',
+                          style: const TextStyle(
+                            fontSize: 42,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                          fit: BoxFit.cover,
                         ),
                       ),
                     ),

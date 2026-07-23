@@ -51,18 +51,34 @@ class ProfileView extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        // Avatar image circle
+                        // Avatar image circle with initial letter fallback
                         Container(
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
-                            image: const DecorationImage(
-                              image: NetworkImage(
-                                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0007B0), Color(0xFF2563EB)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
@@ -153,6 +169,7 @@ class ProfileView extends StatelessWidget {
               // circular buttons grid options list (Keamanan, Bahasa, Ketentuan, Keluar)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start, // align items by top to keep circles level
                 children: [
                   _buildGridItem(
                     context,
@@ -240,6 +257,7 @@ class ProfileView extends StatelessWidget {
       child: SizedBox(
         width: 76,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 56,
@@ -262,6 +280,9 @@ class ProfileView extends StatelessWidget {
             Text(
               authViewModel.translate(label),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF0B1739)),
             )
           ],

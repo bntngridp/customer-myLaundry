@@ -1,12 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../view_models/home_view_model.dart';
 import 'customer_chat_view.dart';
 import 'customer_call_view.dart';
 import 'receipt_view.dart';
 
-class ActiveOrderView extends StatelessWidget {
+class ActiveOrderView extends StatefulWidget {
   const ActiveOrderView({super.key});
+
+  @override
+  State<ActiveOrderView> createState() => _ActiveOrderViewState();
+}
+
+class _ActiveOrderViewState extends State<ActiveOrderView> {
+  static const LatLng _outletLocation = LatLng(-6.917464, 107.619123);
+  static const LatLng _courierLocation = LatLng(-6.919400, 107.622500);
+  static const LatLng _customerLocation = LatLng(-6.921464, 107.625123);
+
+  final Set<Marker> _markers = {
+    Marker(
+      markerId: const MarkerId('outlet'),
+      position: _outletLocation,
+      infoWindow: const InfoWindow(title: 'Outlet myLaundry Main Store'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+    ),
+    Marker(
+      markerId: const MarkerId('courier'),
+      position: _courierLocation,
+      infoWindow: const InfoWindow(title: 'Kurir: Surwanto (D 1080 ABK)'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    ),
+    Marker(
+      markerId: const MarkerId('customer'),
+      position: _customerLocation,
+      infoWindow: const InfoWindow(title: 'Lokasi Penjemputan / Rumah Anda'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    ),
+  };
+
+  final Set<Polyline> _polylines = {
+    const Polyline(
+      polylineId: PolylineId('delivery_route'),
+      points: [
+        _outletLocation,
+        _courierLocation,
+        _customerLocation,
+      ],
+      color: Color(0xFF0007B0),
+      width: 4,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +61,19 @@ class ActiveOrderView extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Custom road map background painter
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _InteractiveRoadMapPainter(),
+          // Google Map Background Layer
+          GoogleMap(
+            initialCameraPosition: const CameraPosition(
+              target: _courierLocation,
+              zoom: 14.5,
             ),
+            markers: _markers,
+            polylines: _polylines,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
           ),
 
-          // Safe Area App Bar
+          // Safe Area App Bar Back Button
           Positioned(
             top: 0,
             left: 0,
@@ -59,11 +108,11 @@ class ActiveOrderView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0007B0),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: const Color(0xFF0007B0).withValues(alpha: 0.3),
+                      color: Color(0x4D0007B0),
                       blurRadius: 15,
-                      offset: const Offset(0, 5),
+                      offset: Offset(0, 5),
                     )
                   ],
                 ),
@@ -116,11 +165,11 @@ class ActiveOrderView extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
+                    color: Color(0x14000000),
                     blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    offset: Offset(0, 8),
                   )
                 ],
               ),
@@ -251,91 +300,4 @@ class ActiveOrderView extends StatelessWidget {
       ),
     );
   }
-}
-
-class _InteractiveRoadMapPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Fill background with light green land color
-    final bgPaint = Paint()..color = const Color(0xFFF1F5F9);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    final roadPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 32.0
-      ..strokeCap = StrokeCap.round;
-
-    final roadBorderPaint = Paint()
-      ..color = const Color(0xFFCBD5E1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 36.0
-      ..strokeCap = StrokeCap.round;
-
-    // Draw road path borders then roads
-    final path = Path()
-      ..moveTo(0, size.height * 0.3)
-      ..lineTo(size.width, size.height * 0.5)
-      ..moveTo(size.width * 0.3, 0)
-      ..quadraticBezierTo(size.width * 0.4, size.height * 0.5, size.width * 0.5, size.height)
-      ..moveTo(0, size.height * 0.8)
-      ..lineTo(size.width, size.height * 0.7);
-
-    canvas.drawPath(path, roadBorderPaint);
-    canvas.drawPath(path, roadPaint);
-
-    // Draw Hospital Area Landmark (Oetomo Hospital)
-    final landmarkPaint = Paint()
-      ..color = const Color(0xFFE2E8F0)
-      ..style = PaintingStyle.fill;
-    
-    final hospitalRect = Rect.fromLTWH(size.width * 0.1, size.height * 0.45, 120, 60);
-    canvas.drawRRect(RRect.fromRectAndRadius(hospitalRect, const Radius.circular(12)), landmarkPaint);
-
-    // Draw red cross icon on hospital
-    final crossPaint = Paint()
-      ..color = const Color(0xFFEF4444)
-      ..strokeWidth = 4.0
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(size.width * 0.1 + 60, size.height * 0.45 + 20), Offset(size.width * 0.1 + 60, size.height * 0.45 + 40), crossPaint);
-    canvas.drawLine(Offset(size.width * 0.1 + 50, size.height * 0.45 + 30), Offset(size.width * 0.1 + 70, size.height * 0.45 + 30), crossPaint);
-
-    // Draw Text Labels
-    const textStyle = TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold);
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-
-    // Oetomo Hospital Label
-    textPainter.text = const TextSpan(text: 'Oetomo Hospital', style: textStyle);
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(size.width * 0.1 + 18, size.height * 0.45 + 44));
-
-    // Bulevar Podomoro La Label
-    textPainter.text = const TextSpan(text: 'Bulevar Podomoro La', style: textStyle);
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(size.width * 0.42, size.height * 0.82));
-
-    // Pin Markers (Blue for Courier, Red for Customer)
-    final blueMarker = Paint()
-      ..color = const Color(0xFF0007B0)
-      ..style = PaintingStyle.fill;
-    
-    final redMarker = Paint()
-      ..color = const Color(0xFFEF4444)
-      ..style = PaintingStyle.fill;
-
-    // Draw Courier pin
-    final courierOffset = Offset(size.width * 0.4, size.height * 0.38);
-    canvas.drawCircle(courierOffset, 12, blueMarker);
-    canvas.drawCircle(courierOffset, 6, Paint()..color = Colors.white);
-
-    // Draw Customer pin
-    final customerOffset = Offset(size.width * 0.62, size.height * 0.52);
-    canvas.drawCircle(customerOffset, 12, redMarker);
-    canvas.drawCircle(customerOffset, 6, Paint()..color = Colors.white);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
