@@ -9,6 +9,8 @@ import 'data/services/address_service.dart';
 import 'data/repositories/address_repository.dart';
 import 'data/services/branch_service.dart';
 import 'data/repositories/branch_repository.dart';
+import 'data/services/rating_service.dart';
+import 'data/repositories/rating_repository.dart';
 import 'ui/features/auth/view_models/auth_view_model.dart';
 import 'ui/features/home/view_models/home_view_model.dart';
 import 'ui/features/home/view_models/order_view_model.dart';
@@ -37,6 +39,9 @@ void main() async {
   final branchService = BranchService();
   final branchRepository = BranchRepository(branchService: branchService);
 
+  final ratingService = RatingService();
+  final ratingRepository = RatingRepository(ratingService: ratingService);
+
   final notificationService = NotificationService();
   final notificationRepository = NotificationRepository(notificationService: notificationService);
 
@@ -54,6 +59,8 @@ void main() async {
         Provider<AddressRepository>.value(value: addressRepository),
         Provider<BranchService>.value(value: branchService),
         Provider<BranchRepository>.value(value: branchRepository),
+        Provider<RatingService>.value(value: ratingService),
+        Provider<RatingRepository>.value(value: ratingRepository),
         Provider<NotificationService>.value(value: notificationService),
         Provider<NotificationRepository>.value(value: notificationRepository),
         ChangeNotifierProvider<AuthViewModel>(
