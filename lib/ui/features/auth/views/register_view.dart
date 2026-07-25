@@ -209,7 +209,7 @@ class _RegisterViewState extends State<RegisterView> {
                         style: const TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF0B1739), fontSize: 14),
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF0007B0), size: 20),
-                          hintText: 'Nomor Telepon (mis. 081234567890)',
+                          hintText: 'Nomor Telepon',
                           hintStyle: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.normal),
                           filled: true,
                           fillColor: const Color(0xFFF8F9FA),
@@ -259,7 +259,7 @@ class _RegisterViewState extends State<RegisterView> {
                               });
                             },
                           ),
-                          hintText: viewModel.translate('Kata Sandi Baru'),
+                          hintText: viewModel.translate('Kata Sandi'),
                           hintStyle: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.normal),
                           filled: true,
                           fillColor: const Color(0xFFF8F9FA),

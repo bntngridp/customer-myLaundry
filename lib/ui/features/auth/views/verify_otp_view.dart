@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/auth_view_model.dart';
@@ -14,9 +15,34 @@ class VerifyOtpView extends StatefulWidget {
 class _VerifyOtpViewState extends State<VerifyOtpView> {
   final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  Timer? _timer;
+  int _cooldownSeconds = 60;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldownTimer();
+  }
+
+  void _startCooldownTimer([int seconds = 60]) {
+    _timer?.cancel();
+    setState(() {
+      _cooldownSeconds = seconds;
+    });
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_cooldownSeconds > 0) {
+        setState(() {
+          _cooldownSeconds--;
+        });
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _timer?.cancel();
     for (var controller in _controllers) {
       controller.dispose();
     }
@@ -143,17 +169,24 @@ class _VerifyOtpViewState extends State<VerifyOtpView> {
                       ),
                       const SizedBox(height: 4),
                       GestureDetector(
-                        onTap: () async {
-                          final success = await viewModel.sendForgotPassword(targetEmail);
-                          if (success && context.mounted) {
-                            AppSnackBar.showSuccess(context, 'Kode OTP berhasil dikirim ulang');
-                          }
-                        },
+                        onTap: _cooldownSeconds > 0 || viewModel.isLoading
+                            ? null
+                            : () async {
+                                final success = await viewModel.sendForgotPassword(targetEmail);
+                                if (success && context.mounted) {
+                                  AppSnackBar.showSuccess(context, 'Kode OTP berhasil dikirim ulang');
+                                  _startCooldownTimer(60);
+                                } else if (context.mounted && viewModel.errorMessage != null) {
+                                  AppSnackBar.showError(context, viewModel.errorMessage!);
+                                }
+                              },
                         child: Text(
-                          viewModel.translate('Kirim Ulang'),
-                          style: const TextStyle(
+                          _cooldownSeconds > 0
+                              ? 'Kirim Ulang ($_cooldownSeconds s)'
+                              : viewModel.translate('Kirim Ulang'),
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF0007B0),
+                            color: _cooldownSeconds > 0 ? Colors.black38 : const Color(0xFF0007B0),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
