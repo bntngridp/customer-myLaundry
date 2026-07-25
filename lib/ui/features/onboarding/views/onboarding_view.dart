@@ -119,22 +119,31 @@ class _OnboardingViewState extends State<OnboardingView> with SingleTickerProvid
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Image.asset(
-                              'assets/images/logo-nobg.png',
-                              width: 26,
-                              height: 26,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => Container(
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.asset(
+                                'assets/images/logo-nobg.png',
                                 width: 26,
                                 height: 26,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF0007B0),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.local_laundry_service_rounded,
-                                  size: 14,
-                                  color: Colors.white,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Image.asset(
+                                  'assets/images/logo-mylaundry.png',
+                                  width: 26,
+                                  height: 26,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF0007B0),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.local_laundry_service_rounded,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
