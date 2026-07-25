@@ -171,7 +171,15 @@ class OrderViewModel extends ChangeNotifier {
 
     try {
       final locationData = await LocationService.getCurrentLocation();
-      final String resolvedAddress = locationData['address'] as String;
+      final String resolvedAddress = (locationData['display_name'] as String?)?.isNotEmpty == true
+          ? (locationData['display_name'] as String)
+          : (locationData['address'] as String? ?? 'Posisi Real GPS');
+      final String district = (locationData['district'] as String?)?.isNotEmpty == true
+          ? (locationData['district'] as String)
+          : 'Kota/Kecamatan';
+      final String subDistrict = (locationData['sub_district'] as String?)?.isNotEmpty == true
+          ? (locationData['sub_district'] as String)
+          : 'Kelurahan';
 
       final gpsAddr = await addressRepository.createAddress(
         receiverName: user?.username ?? 'Lokasi Saya (GPS Akurat)',
@@ -180,8 +188,8 @@ class OrderViewModel extends ChangeNotifier {
         residenceName: 'Posisi Real Terdeteksi',
         addressNotes: 'Terdeteksi otomatis via Real GPS Browser/Device',
         streetName: resolvedAddress,
-        district: 'Bojongsoang',
-        subDistrict: 'Sukapura',
+        district: district,
+        subDistrict: subDistrict,
         token: token,
       );
       _addresses.insert(0, gpsAddr);

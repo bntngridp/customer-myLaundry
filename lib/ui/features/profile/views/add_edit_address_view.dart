@@ -66,14 +66,18 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
     setState(() => _isLocatingGps = true);
     try {
       final loc = await LocationService.getCurrentLocation();
-      final String addrStr = loc['address'] as String? ?? 'Jl. Bojongsoang Raya No. 1';
-      final double lat = loc['lat'] as double? ?? -6.9740;
-      final double lng = loc['lng'] as double? ?? 107.6303;
+      final String addrStr = (loc['display_name'] as String?)?.isNotEmpty == true
+          ? (loc['display_name'] as String)
+          : (loc['address'] as String? ?? '');
+      final String district = loc['district'] as String? ?? '';
+      final String subDistrict = loc['sub_district'] as String? ?? '';
+      final double lat = loc['lat'] as double? ?? 0.0;
+      final double lng = loc['lng'] as double? ?? 0.0;
 
       setState(() {
         _streetNameController.text = addrStr;
-        _districtController.text = 'Bojongsoang';
-        _subDistrictController.text = 'Sukapura';
+        if (district.isNotEmpty) _districtController.text = district;
+        if (subDistrict.isNotEmpty) _subDistrictController.text = subDistrict;
         _notesController.text = 'Lokasi GPS (Lat: ${lat.toStringAsFixed(4)}, Lng: ${lng.toStringAsFixed(4)})';
         _isLocatingGps = false;
       });
