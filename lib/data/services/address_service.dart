@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -47,7 +48,7 @@ class AddressService {
     return await _client.post(
       url,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', // It uses ShouldBind in gin, which parses form/json. Let's use json.
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Bearer $token',
       },
       body: {
@@ -59,6 +60,49 @@ class AddressService {
         'street_name': streetName,
         'district': district,
         'sub_district': subDistrict,
+      },
+    );
+  }
+
+  Future<http.Response> updateAddress({
+    required int addressId,
+    required String receiverName,
+    required String phoneNumber,
+    required String houseNumber,
+    required String residenceName,
+    required String addressNotes,
+    required String streetName,
+    required String district,
+    required String subDistrict,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/addresses/$addressId');
+    return await _client.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'receiver_name': receiverName,
+        'phone_number': phoneNumber,
+        'house_number': houseNumber,
+        'residence_name': residenceName,
+        'address_notes': addressNotes,
+        'street_name': streetName,
+        'district': district,
+        'sub_district': subDistrict,
+      }),
+    );
+  }
+
+  Future<http.Response> deleteAddress(int addressId, String token) async {
+    final url = Uri.parse('$baseUrl/addresses/$addressId');
+    return await _client.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
     );
   }

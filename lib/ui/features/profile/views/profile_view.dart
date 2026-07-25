@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/profile_view_model.dart';
 import 'edit_profile_view.dart';
+import 'address_list_view.dart';
 import 'promo_list_view.dart';
 import 'order_history_view.dart';
 import 'security_settings_view.dart';
@@ -132,7 +133,7 @@ class ProfileView extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Promo & Riwayat Quick Buttons Row
+              // Promo, Riwayat, & Alamat Quick Buttons Row
               Row(
                 children: [
                   Expanded(
@@ -148,7 +149,21 @@ class ProfileView extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildQuickButton(
+                      context,
+                      icon: Icons.location_on_outlined,
+                      label: 'Alamat',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AddressListView()),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: _buildQuickButton(
                       context,
