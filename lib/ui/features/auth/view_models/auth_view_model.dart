@@ -171,8 +171,8 @@ class AuthViewModel extends ChangeNotifier {
     if (lower.contains('user not found') || lower.contains('record not found')) {
       return translate('Pengguna tidak ditemukan');
     }
-    if (lower.contains('already exists') || lower.contains('already registered')) {
-      return translate('Email sudah terdaftar');
+    if (lower.contains('already exists') || lower.contains('already registered') || lower.contains('sudah terdaftar') || lower.contains('sudah digunakan')) {
+      return translate('Email sudah terdaftar, silakan gunakan email lain atau login');
     }
     if (lower.contains('otp')) {
       return translate('Kode OTP tidak valid atau sudah kadaluarsa');
