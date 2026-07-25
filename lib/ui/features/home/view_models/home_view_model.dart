@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/repositories/order_repository.dart';
+import '../../../../data/repositories/branch_repository.dart';
+import '../../../../data/services/location_service.dart';
 import '../../../../data/services/promo_service.dart';
 import '../../../../domain/models/order.dart';
 import '../../../../domain/models/branch.dart';
@@ -9,30 +11,40 @@ import '../../../../domain/models/branch.dart';
 class HomeViewModel extends ChangeNotifier {
   final AuthRepository authRepository;
   final OrderRepository orderRepository;
+  final BranchRepository? branchRepository;
 
   bool _isLoading = false;
   String? _errorMessage;
   OrderModel? _activeOrder;
 
-  final List<BranchModel> _branches = [
+  List<BranchModel> _branches = [
     BranchModel(
+      id: 1,
       name: 'myLaundry Bojongsoang',
       address: 'Jl. Raya Bojongsoang No. 12',
-      distance: 0.2,
+      latitude: -6.9740,
+      longitude: 107.6303,
+      distanceKm: 0.2,
       rating: 4.8,
       imageUrl: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?auto=format&fit=crop&q=80&w=300',
     ),
     BranchModel(
+      id: 2,
       name: 'myLaundry Sukapura',
       address: 'Jl. Sukapura Raya No. 45',
-      distance: 0.9,
+      latitude: -6.9775,
+      longitude: 107.6335,
+      distanceKm: 0.9,
       rating: 4.6,
       imageUrl: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&q=80&w=300',
     ),
     BranchModel(
+      id: 3,
       name: 'myLaundry Kiaracondong',
       address: 'Jl. Stasiun Kiaracondong No. 8',
-      distance: 2.3,
+      latitude: -6.9400,
+      longitude: 107.6450,
+      distanceKm: 2.3,
       rating: 4.7,
       imageUrl: 'https://images.unsplash.com/photo-1604335399105-a0c585fd810e?auto=format&fit=crop&q=80&w=300',
     ),
@@ -43,8 +55,10 @@ class HomeViewModel extends ChangeNotifier {
   HomeViewModel({
     required this.authRepository,
     required this.orderRepository,
+    this.branchRepository,
   }) {
     fetchPromos();
+    fetchBranches();
   }
 
   bool get isLoading => _isLoading;
@@ -52,6 +66,21 @@ class HomeViewModel extends ChangeNotifier {
   OrderModel? get activeOrder => _activeOrder;
   List<BranchModel> get branches => _branches;
   List<Map<String, String>> get promos => _promos;
+
+  Future<void> fetchBranches() async {
+    if (branchRepository == null) return;
+    try {
+      final loc = await LocationService.getCurrentLocation();
+      final double? lat = loc['lat'] as double?;
+      final double? lng = loc['lng'] as double?;
+
+      final list = await branchRepository!.getBranches(lat: lat, lng: lng);
+      if (list.isNotEmpty) {
+        _branches = list;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
 
   Future<void> fetchPromos() async {
     try {
@@ -84,25 +113,22 @@ class HomeViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    fetchPromos(); // Fetch latest active promos dynamically from DB
+    fetchPromos();
 
     try {
       final orders = await orderRepository.getOrders(token);
-      
-      // Active order is one that is not completed or cancelled
       final activeList = orders.where((o) {
         final status = o.status.toLowerCase();
         return status != 'completed' && status != 'cancelled';
       }).toList();
 
       if (activeList.isNotEmpty) {
-        // Sort by id descending to get the latest active order
         activeList.sort((a, b) => b.id.compareTo(a.id));
         _activeOrder = activeList.first;
       } else {
         _activeOrder = null;
       }
-      
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -113,12 +139,11 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  // Translates database status into Figma status string and color
   Map<String, dynamic> getOrderStatusDetails() {
     if (_activeOrder == null) {
       return {
         'text': 'Yuk gunakan promo #BersihTanpaPusing',
-        'color': const Color(0xFF0007B0), // Blue indicator
+        'color': const Color(0xFF0007B0),
       };
     }
 
@@ -127,45 +152,45 @@ class HomeViewModel extends ChangeNotifier {
       case 'pending':
         return {
           'text': 'Sedang mencari kurir',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
       case 'accepted':
         return {
           'text': 'Kurir dalam perjalanan',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
       case 'arrived':
         return {
           'text': 'Kurir telah sampai',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
       case 'in progress':
       case 'processing':
         return {
           'text': 'Pesanan sedang diproses',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
       case 'unpaid':
       case 'waiting_payment':
         return {
           'text': 'Menunggu pembayaran',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
       case 'returning':
       case 'delivering':
         return {
           'text': 'Kurir dalam perjalanan mengantar pakaianmu',
-          'color': const Color(0xFF0007B0), // Blue indicator
+          'color': const Color(0xFF0007B0),
         };
       case 'done':
         return {
           'text': 'Kurir telah sampai',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
       default:
         return {
           'text': 'Pesanan diproses',
-          'color': const Color(0xFFEAB308), // Yellow indicator
+          'color': const Color(0xFFEAB308),
         };
     }
   }

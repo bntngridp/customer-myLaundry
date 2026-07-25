@@ -7,6 +7,8 @@ import 'data/services/order_service.dart';
 import 'data/repositories/order_repository.dart';
 import 'data/services/address_service.dart';
 import 'data/repositories/address_repository.dart';
+import 'data/services/branch_service.dart';
+import 'data/repositories/branch_repository.dart';
 import 'ui/features/auth/view_models/auth_view_model.dart';
 import 'ui/features/home/view_models/home_view_model.dart';
 import 'ui/features/home/view_models/order_view_model.dart';
@@ -32,6 +34,9 @@ void main() async {
   final addressService = AddressService();
   final addressRepository = AddressRepository(addressService: addressService);
 
+  final branchService = BranchService();
+  final branchRepository = BranchRepository(branchService: branchService);
+
   final notificationService = NotificationService();
   final notificationRepository = NotificationRepository(notificationService: notificationService);
 
@@ -47,6 +52,8 @@ void main() async {
         Provider<OrderRepository>.value(value: orderRepository),
         Provider<AddressService>.value(value: addressService),
         Provider<AddressRepository>.value(value: addressRepository),
+        Provider<BranchService>.value(value: branchService),
+        Provider<BranchRepository>.value(value: branchRepository),
         Provider<NotificationService>.value(value: notificationService),
         Provider<NotificationRepository>.value(value: notificationRepository),
         ChangeNotifierProvider<AuthViewModel>(
@@ -56,6 +63,7 @@ void main() async {
           create: (_) => HomeViewModel(
             authRepository: authRepository,
             orderRepository: orderRepository,
+            branchRepository: branchRepository,
           ),
         ),
         ChangeNotifierProvider<OrderViewModel>(

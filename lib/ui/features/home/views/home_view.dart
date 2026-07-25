@@ -795,7 +795,7 @@ class HomeView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '+${branch.distance} Km',
+                              branch.formattedDistance,
                               style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),

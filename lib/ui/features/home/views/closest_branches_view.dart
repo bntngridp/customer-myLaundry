@@ -73,7 +73,7 @@ class ClosestBranchesView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '+${branch.distance} Km',
+                            branch.formattedDistance,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
