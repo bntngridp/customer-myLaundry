@@ -119,17 +119,23 @@ class _OnboardingViewState extends State<OnboardingView> with SingleTickerProvid
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF0007B0),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.local_laundry_service_rounded,
-                                size: 14,
-                                color: Colors.white,
+                            Image.asset(
+                              'assets/images/logo-nobg.png',
+                              width: 26,
+                              height: 26,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 26,
+                                height: 26,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0007B0),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.local_laundry_service_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
