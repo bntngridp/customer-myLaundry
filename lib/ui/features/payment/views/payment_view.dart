@@ -299,11 +299,16 @@ class _PaymentViewState extends State<PaymentView> {
                 ],
               ),
             ),
-            Radio<String>(
-              value: method.id,
-              groupValue: vm.selectedMethod?.id,
-              activeColor: const Color(0xFF0007B0),
-              onChanged: (_) => vm.selectMethod(method),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF0007B0) : const Color(0xFF94A3B8),
+                  width: isSelected ? 6 : 2,
+                ),
+              ),
             ),
           ],
         ),
@@ -364,7 +369,7 @@ class _PaymentViewState extends State<PaymentView> {
                 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=MYLAUNDRY_ORDER_${widget.order.id}_$totalPrice',
                 width: 180,
                 height: 180,
-                errorBuilder: (_, __, ___) => const Icon(Icons.qr_code_2_rounded, size: 140, color: Color(0xFF0007B0)),
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.qr_code_2_rounded, size: 140, color: Color(0xFF0007B0)),
               ),
             ),
             const SizedBox(height: 12),
