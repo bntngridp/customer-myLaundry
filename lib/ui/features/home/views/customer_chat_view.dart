@@ -1,9 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/services/chat_service.dart';
+import '../../../../domain/models/chat_message.dart';
 import 'customer_call_view.dart';
 
 class CustomerChatView extends StatefulWidget {
-  const CustomerChatView({super.key});
+  final int orderId;
+  final String courierName;
+  final String phoneNumber;
+
+  const CustomerChatView({
+    super.key,
+    this.orderId = 0,
+    this.courierName = 'Kurir myLaundry',
+    this.phoneNumber = '',
+  });
 
   @override
   State<CustomerChatView> createState() => _CustomerChatViewState();
@@ -12,22 +25,60 @@ class CustomerChatView extends StatefulWidget {
 class _CustomerChatViewState extends State<CustomerChatView> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService();
 
-  final List<Map<String, dynamic>> _messages = [
-    {'text': 'Mas udah dimana ya', 'isMe': true, 'time': '10:20 am', 'isAudio': false},
-    {'text': 'saya udah di depan kos ya', 'isMe': true, 'time': '10:21 am', 'isAudio': false},
-    {'text': 'Agak macet di sukapura bentar ya', 'isMe': false, 'time': '10:22 am', 'isAudio': false},
-  ];
+  List<ChatMessageModel> _messages = [];
+  bool _isLoadingMessages = true;
+  bool _isSending = false;
+  Timer? _pollTimer;
 
   bool _isRecording = false;
   int _recordSeconds = 0;
-  Timer? _timer;
+  Timer? _recordTimer;
   int? _playingIndex;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    _fetchMessages();
+    // Poll for new chat messages every 3 seconds
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchMessages(silent: true));
+  }
+
+  Future<void> _fetchMessages({bool silent = false}) async {
+    final authRepo = Provider.of<AuthRepository>(context, listen: false);
+    final token = authRepo.token;
+    if (token == null || widget.orderId == 0) {
+      if (mounted && !silent) {
+        setState(() {
+          _isLoadingMessages = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final fetched = await _chatService.getOrderChatMessages(
+        orderId: widget.orderId,
+        token: token,
+      );
+      if (mounted) {
+        final bool hadNew = fetched.length > _messages.length;
+        setState(() {
+          _messages = fetched;
+          _isLoadingMessages = false;
+        });
+        if (hadNew) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        }
+      }
+    } catch (_) {
+      if (mounted && !silent) {
+        setState(() {
+          _isLoadingMessages = false;
+        });
+      }
+    }
   }
 
   void _scrollToBottom() {
@@ -40,18 +91,42 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     }
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty || _isSending) return;
+
+    final authRepo = Provider.of<AuthRepository>(context, listen: false);
+    final token = authRepo.token;
+    if (token == null || widget.orderId == 0) return;
+
     setState(() {
-      _messages.add({
-        'text': _messageController.text.trim(),
-        'isMe': true,
-        'time': 'Just now',
-        'isAudio': false,
-      });
-      _messageController.clear();
+      _isSending = true;
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
+    try {
+      final newMsg = await _chatService.sendChatMessage(
+        orderId: widget.orderId,
+        message: text,
+        token: token,
+      );
+      _messageController.clear();
+      if (mounted) {
+        setState(() {
+          _messages.add(newMsg);
+          _isSending = false;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    }
   }
 
   void _startRecording() {
@@ -59,8 +134,8 @@ class _CustomerChatViewState extends State<CustomerChatView> {
       _isRecording = true;
       _recordSeconds = 0;
     });
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+    _recordTimer?.cancel();
+    _recordTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (mounted) {
         setState(() {
           _recordSeconds++;
@@ -69,41 +144,35 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     });
   }
 
-  void _stopAndSendRecording() {
-    _timer?.cancel();
+  Future<void> _stopAndSendRecording() async {
+    _recordTimer?.cancel();
     final durationStr = _formatDuration(_recordSeconds);
     setState(() {
       _isRecording = false;
       _recordSeconds = 0;
-      _messages.add({
-        'text': 'Pesan Suara',
-        'isMe': true,
-        'time': 'Just now',
-        'isAudio': true,
-        'audioDuration': durationStr,
-      });
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    // Trigger mock reply from courier
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    final authRepo = Provider.of<AuthRepository>(context, listen: false);
+    final token = authRepo.token;
+    if (token == null || widget.orderId == 0) return;
+
+    try {
+      final newMsg = await _chatService.sendChatMessage(
+        orderId: widget.orderId,
+        message: '🎙️ Pesan Suara ($durationStr)',
+        token: token,
+      );
       if (mounted) {
         setState(() {
-          _messages.add({
-            'text': 'Pesan Suara',
-            'isMe': false,
-            'time': 'Just now',
-            'isAudio': true,
-            'audioDuration': '00:04',
-          });
+          _messages.add(newMsg);
         });
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
-    });
+    } catch (_) {}
   }
 
   void _cancelRecording() {
-    _timer?.cancel();
+    _recordTimer?.cancel();
     setState(() {
       _isRecording = false;
       _recordSeconds = 0;
@@ -116,9 +185,17 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     return '$m:$s';
   }
 
+  String _formatTime(DateTime dt) {
+    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'pm' : 'am';
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute $ampm';
+  }
+
   @override
   void dispose() {
-    _timer?.cancel();
+    _pollTimer?.cancel();
+    _recordTimer?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -126,6 +203,10 @@ class _CustomerChatViewState extends State<CustomerChatView> {
 
   @override
   Widget build(BuildContext context) {
+    final authRepo = Provider.of<AuthRepository>(context, listen: false);
+    final currentUserId = authRepo.currentUser?.id;
+    final name = widget.courierName.isNotEmpty ? widget.courierName : 'Kurir myLaundry';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -149,38 +230,27 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                 ),
               ),
               alignment: Alignment.center,
-              child: const Text(
-                'S',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : 'K',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Surwanto',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0B1739)),
+                    name,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0B1739)),
                   ),
                   Text(
-                    'Online',
-                    style: TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.w600),
+                    widget.orderId > 0 ? 'Pesanan #${widget.orderId}' : 'Kurir Aktif',
+                    style: const TextStyle(fontSize: 11, color: Colors.black45),
                   ),
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0007B0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                '8 Menit',
-                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-            )
           ],
         ),
       ),
@@ -189,59 +259,82 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           children: [
             // Messages List
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(20),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  final isMe = msg['isMe'] as bool;
-                  final isAudio = msg['isAudio'] == true;
+              child: _isLoadingMessages
+                  ? const Center(child: CircularProgressIndicator())
+                  : _messages.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.black26),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Belum ada pesan.',
+                                style: TextStyle(color: Colors.black45, fontSize: 14),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Kirim pesan ke $name',
+                                style: TextStyle(color: Colors.black38, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(20),
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            final msg = _messages[index];
+                            final isMe = (msg.senderRole == 'customer') ||
+                                (currentUserId != null && msg.senderId == currentUserId);
+                            final isAudio = msg.message.contains('🎙️ Pesan Suara');
 
-                  return Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.78,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isMe ? const Color(0xFF0007B0) : Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(16),
-                          topRight: const Radius.circular(16),
-                          bottomLeft: Radius.circular(isMe ? 16 : 0),
-                          bottomRight: Radius.circular(isMe ? 0 : 16),
+                            return Align(
+                              alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.78,
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isMe ? const Color(0xFF0007B0) : Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(16),
+                                    topRight: const Radius.circular(16),
+                                    bottomLeft: Radius.circular(isMe ? 16 : 0),
+                                    bottomRight: Radius.circular(isMe ? 0 : 16),
+                                  ),
+                                  border: isMe ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: isAudio
+                                    ? _buildAudioBubble(msg, index, isMe)
+                                    : Column(
+                                        crossAxisAlignment:
+                                            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            msg.message,
+                                            style: TextStyle(
+                                              color: isMe ? Colors.white : const Color(0xFF0B1739),
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _formatTime(msg.sentAt),
+                                            style: TextStyle(
+                                              color: isMe ? Colors.white70 : Colors.black38,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            );
+                          },
                         ),
-                        border: isMe ? null : Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: isAudio
-                          ? _buildAudioBubble(msg, index, isMe)
-                          : Column(
-                              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  msg['text'],
-                                  style: TextStyle(
-                                    color: isMe ? Colors.white : const Color(0xFF0B1739),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  msg['time'],
-                                  style: TextStyle(
-                                    color: isMe ? Colors.white70 : Colors.black38,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  );
-                },
-              ),
             ),
 
             // Message Input bar
@@ -256,7 +349,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     );
   }
 
-  Widget _buildAudioBubble(Map<String, dynamic> msg, int index, bool isMe) {
+  Widget _buildAudioBubble(ChatMessageModel msg, int index, bool isMe) {
     final isPlaying = _playingIndex == index;
     return Column(
       crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -289,39 +382,19 @@ class _CustomerChatViewState extends State<CustomerChatView> {
               ),
             ),
             const SizedBox(width: 10),
-            // Audio Waveform Visualization
-            Row(
-              children: List.generate(12, (i) {
-                final heights = [12.0, 22.0, 16.0, 28.0, 10.0, 24.0, 18.0, 30.0, 14.0, 20.0, 26.0, 12.0];
-                final h = heights[i % heights.length];
-                final active = isPlaying && (i % 3 == 0);
-                return Container(
-                  width: 3,
-                  height: active ? h + 4 : h,
-                  margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                  decoration: BoxDecoration(
-                    color: isMe
-                        ? (active ? Colors.white : Colors.white70)
-                        : (active ? const Color(0xFF0007B0) : Colors.black26),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(width: 10),
             Text(
-              msg['audioDuration']?.toString() ?? '00:05',
+              msg.message,
               style: TextStyle(
                 color: isMe ? Colors.white : const Color(0xFF0B1739),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
-          msg['time']?.toString() ?? 'Just now',
+          _formatTime(msg.sentAt),
           style: TextStyle(
             color: isMe ? Colors.white60 : Colors.black38,
             fontSize: 10,
@@ -436,10 +509,12 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         const SizedBox(width: 12),
         GestureDetector(
           onTap: _sendMessage,
-          child: const CircleAvatar(
-            backgroundColor: Color(0xFFE6F0FF),
-            foregroundColor: Color(0xFF0007B0),
-            child: Icon(Icons.send, size: 18),
+          child: CircleAvatar(
+            backgroundColor: const Color(0xFFE6F0FF),
+            foregroundColor: const Color(0xFF0007B0),
+            child: _isSending
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.send, size: 18),
           ),
         ),
         const SizedBox(width: 8),
@@ -447,7 +522,12 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const CustomerCallView()),
+              MaterialPageRoute(
+                builder: (context) => CustomerCallView(
+                  phoneNumber: widget.phoneNumber,
+                  courierName: widget.courierName,
+                ),
+              ),
             );
           },
           child: const CircleAvatar(

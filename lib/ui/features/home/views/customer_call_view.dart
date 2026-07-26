@@ -1,8 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomerCallView extends StatefulWidget {
-  const CustomerCallView({super.key});
+  final String phoneNumber;
+  final String courierName;
+
+  const CustomerCallView({
+    super.key,
+    this.phoneNumber = '',
+    this.courierName = 'Kurir myLaundry',
+  });
 
   @override
   State<CustomerCallView> createState() => _CustomerCallViewState();
@@ -17,14 +25,29 @@ class _CustomerCallViewState extends State<CustomerCallView> {
   @override
   void initState() {
     super.initState();
+    _triggerNativeCall();
     _startTimer();
+  }
+
+  Future<void> _triggerNativeCall() async {
+    if (widget.phoneNumber.trim().isNotEmpty) {
+      final cleanNumber = widget.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+      final uri = Uri.parse('tel:$cleanNumber');
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        }
+      } catch (_) {}
+    }
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _seconds++;
-      });
+      if (mounted) {
+        setState(() {
+          _seconds++;
+        });
+      }
     });
   }
 
@@ -42,6 +65,8 @@ class _CustomerCallViewState extends State<CustomerCallView> {
 
   @override
   Widget build(BuildContext context) {
+    final name = widget.courierName.isNotEmpty ? widget.courierName : 'Kurir myLaundry';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -58,14 +83,24 @@ class _CustomerCallViewState extends State<CustomerCallView> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Surwanto',
-              style: TextStyle(
+            Text(
+              name,
+              style: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0B1739),
               ),
             ),
+            if (widget.phoneNumber.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                widget.phoneNumber,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             // Call duration timer
             Text(
@@ -100,9 +135,9 @@ class _CustomerCallViewState extends State<CustomerCallView> {
                   border: Border.all(color: const Color(0xFFE2E8F0), width: 6),
                 ),
                 alignment: Alignment.center,
-                child: const Text(
-                  'S',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 64),
+                child: Text(
+                  name.isNotEmpty ? name[0].toUpperCase() : 'K',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 64),
                 ),
               ),
             ),

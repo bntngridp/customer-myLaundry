@@ -244,7 +244,13 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const CustomerChatView()),
+                              MaterialPageRoute(
+                                builder: (context) => CustomerChatView(
+                                  orderId: activeOrder?.id ?? 0,
+                                  courierName: activeOrder?.courier?.username ?? 'Kurir myLaundry',
+                                  phoneNumber: activeOrder?.courier?.phoneNumber ?? '',
+                                ),
+                              ),
                             );
                           },
                           child: Container(
@@ -273,7 +279,12 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const CustomerCallView()),
+                            MaterialPageRoute(
+                              builder: (context) => CustomerCallView(
+                                phoneNumber: activeOrder?.courier?.phoneNumber ?? '',
+                                courierName: activeOrder?.courier?.username ?? 'Kurir myLaundry',
+                              ),
+                            ),
                           );
                         },
                         child: Container(
