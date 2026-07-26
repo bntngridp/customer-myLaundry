@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import '../view_models/home_view_model.dart';
 import 'customer_chat_view.dart';
 import 'customer_call_view.dart';
-import 'receipt_view.dart';
+import '../../payment/views/payment_view.dart';
+import '../../rating/views/rating_dialog.dart';
 
 class ActiveOrderView extends StatefulWidget {
   const ActiveOrderView({super.key});
@@ -28,7 +29,7 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
     Marker(
       markerId: const MarkerId('courier'),
       position: _courierLocation,
-      infoWindow: const InfoWindow(title: 'Kurir: Surwanto (D 1080 ABK)'),
+      infoWindow: const InfoWindow(title: 'Posisi Kurir'),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
     ),
     Marker(
@@ -52,11 +53,38 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
     ),
   };
 
+  int _getStepIndex(String status) {
+    switch (status.toLowerCase()) {
+      case 'waiting for courier approval':
+      case 'pending':
+        return 0;
+      case 'courier_assigned':
+      case 'picked_up':
+      case 'pickup':
+        return 1;
+      case 'processing':
+      case 'washing':
+      case 'ironing':
+        return 2;
+      case 'delivering':
+      case 'out_for_delivery':
+        return 3;
+      case 'completed':
+      case 'done':
+        return 4;
+      default:
+        return 1;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeViewModel = Provider.of<HomeViewModel>(context);
     final activeOrder = homeViewModel.activeOrder;
-    final status = activeOrder?.status.toLowerCase() ?? '';
+    final status = activeOrder?.status.toLowerCase() ?? 'waiting for courier approval';
+    final courierName = activeOrder?.courier?.username ?? 'Menunggu Kurir';
+    final courierPhone = activeOrder?.courier?.phoneNumber ?? '';
+    final currentStep = _getStepIndex(status);
 
     return Scaffold(
       body: Stack(
@@ -73,7 +101,7 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
             zoomControlsEnabled: false,
           ),
 
-          // Safe Area App Bar Back Button
+          // Safe Area App Bar Back Button & Status Card Header
           Positioned(
             top: 0,
             left: 0,
@@ -89,6 +117,46 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back),
                         onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1A000000),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.local_laundry_service, color: Color(0xFF0007B0), size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Pesanan #${activeOrder?.id ?? 1}',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0B1739)),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0007B0).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                activeOrder?.status ?? 'Aktif',
+                                style: const TextStyle(color: Color(0xFF0007B0), fontWeight: FontWeight.bold, fontSize: 10),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -137,10 +205,12 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ReceiptView()),
-                        );
+                        if (activeOrder != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => PaymentView(order: activeOrder)),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -154,11 +224,11 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
               ),
             ),
 
-          // Floating Bottom Panel (Courier Tracking info)
+          // Floating Bottom Panel (Status Timeline Stepper + Dynamic Courier info)
           Positioned(
-            bottom: 24,
-            left: 24,
-            right: 24,
+            bottom: 20,
+            left: 20,
+            right: 20,
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -175,39 +245,52 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Courier Details Row
+                  // 1. Status Stepper Header Timeline
+                  const Text(
+                    'Status Pengerjaan Cucian',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStatusStepper(currentStep),
+                  const SizedBox(height: 18),
+
+                  const Divider(color: Color(0xFFE2E8F0), height: 1),
+                  const SizedBox(height: 16),
+
+                  // 2. Dynamic Courier Details Row
                   Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 24,
-                        backgroundColor: Color(0xFF0007B0),
+                        backgroundColor: const Color(0xFF0007B0),
                         child: Text(
-                          'K',
-                          style: TextStyle(
+                          courierName.isNotEmpty ? courierName[0].toUpperCase() : 'K',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      const Expanded(
+                      const SizedBox(width: 14),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Surwanto',
-                              style: TextStyle(
-                                fontSize: 16,
+                              courierName,
+                              style: const TextStyle(
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF0B1739),
                               ),
                             ),
                             Text(
-                              'D 1080 ABK',
-                              style: TextStyle(
-                                fontSize: 12,
+                              courierPhone.isNotEmpty ? courierPhone : 'Kurir Mitra ResmimyLaundry',
+                              style: const TextStyle(
+                                fontSize: 11,
                                 color: Colors.black38,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -216,23 +299,21 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE6F0FF),
-                          borderRadius: BorderRadius.circular(16),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Column(
+                        child: const Row(
                           children: [
+                            Icon(Icons.verified, size: 14, color: Color(0xFF10B981)),
+                            SizedBox(width: 4),
                             Text(
-                              'Driver akan tiba dalam',
-                              style: TextStyle(fontSize: 9, color: Colors.black45),
-                            ),
-                            Text(
-                              '8 Menit',
+                              'Aktif',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0007B0),
+                                color: Color(0xFF10B981),
                               ),
                             ),
                           ],
@@ -240,9 +321,9 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                       )
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                  // Chat Input Form / Trigger
+                  // 3. Chat & Call Action Buttons
                   Row(
                     children: [
                       Expanded(
@@ -253,34 +334,34 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                               MaterialPageRoute(
                                 builder: (context) => CustomerChatView(
                                   orderId: activeOrder?.id ?? 0,
-                                  courierName: activeOrder?.courier?.username ?? 'Kurir myLaundry',
-                                  phoneNumber: activeOrder?.courier?.phoneNumber ?? '',
+                                  courierName: courierName,
+                                  phoneNumber: courierPhone,
                                 ),
                               ),
                             );
                           },
                           child: Container(
-                            height: 48,
+                            height: 46,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF8F9FA),
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(23),
                               border: Border.all(color: const Color(0xFFE2E8F0)),
                             ),
                             child: const Row(
                               children: [
                                 Text(
-                                  'Obrolan pesan bisa di sini ya...',
-                                  style: TextStyle(color: Colors.black38, fontSize: 13),
+                                  'Kirim pesan ke kurir...',
+                                  style: TextStyle(color: Colors.black38, fontSize: 12),
                                 ),
                                 Spacer(),
-                                Icon(Icons.send, color: Color(0xFF0007B0), size: 18),
+                                Icon(Icons.send_rounded, color: Color(0xFF0007B0), size: 16),
                               ],
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -289,15 +370,15 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                               builder: (context) => CustomerCallView(
                                 targetUserId: activeOrder?.courier?.id ?? 0,
                                 orderId: activeOrder?.id ?? 0,
-                                phoneNumber: activeOrder?.courier?.phoneNumber ?? '',
-                                courierName: activeOrder?.courier?.username ?? 'Kurir myLaundry',
+                                phoneNumber: courierPhone,
+                                courierName: courierName,
                               ),
                             ),
                           );
                         },
                         child: Container(
-                          width: 48,
-                          height: 48,
+                          width: 46,
+                          height: 46,
                           decoration: const BoxDecoration(
                             color: Color(0xFF0007B0),
                             shape: BoxShape.circle,
@@ -305,18 +386,111 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                           child: const Icon(
                             Icons.phone,
                             color: Colors.white,
-                            size: 20,
+                            size: 18,
                           ),
                         ),
                       )
                     ],
-                  )
+                  ),
+                  if (currentStep >= 4 || status == 'completed') ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          RatingDialog.show(context, activeOrder?.id.toString() ?? '1');
+                        },
+                        icon: const Icon(Icons.star_rounded, color: Color(0xFFF59E0B)),
+                        label: const Text(
+                          'Beri Ulasan Laundry',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0007B0)),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFFBEB),
+                          elevation: 0,
+                          side: const BorderSide(color: Color(0xFFFDE68A)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusStepper(int currentStep) {
+    final steps = [
+      {'title': 'Dibuat', 'icon': Icons.assignment},
+      {'title': 'Penjemputan', 'icon': Icons.local_shipping},
+      {'title': 'Diproses', 'icon': Icons.local_laundry_service},
+      {'title': 'Pengantaran', 'icon': Icons.directions_bike},
+      {'title': 'Selesai', 'icon': Icons.check_circle},
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(steps.length, (index) {
+        final isDone = index <= currentStep;
+        final isCurrent = index == currentStep;
+
+        return Expanded(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  if (index > 0)
+                    Expanded(
+                      child: Container(
+                        height: 3,
+                        color: index <= currentStep ? const Color(0xFF0007B0) : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isDone ? const Color(0xFF0007B0) : const Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isCurrent ? const Color(0xFF0007B0) : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      steps[index]['icon'] as IconData,
+                      size: 16,
+                      color: isDone ? Colors.white : Colors.black38,
+                    ),
+                  ),
+                  if (index < steps.length - 1)
+                    Expanded(
+                      child: Container(
+                        height: 3,
+                        color: index < currentStep ? const Color(0xFF0007B0) : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                steps[index]['title'] as String,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  color: isCurrent ? const Color(0xFF0007B0) : Colors.black45,
+                ),
+              )
+            ],
+          ),
+        );
+      }),
     );
   }
 }

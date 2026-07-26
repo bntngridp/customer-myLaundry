@@ -23,6 +23,8 @@ import 'ui/features/auth/views/login_view.dart';
 import 'data/services/notification_service.dart';
 import 'data/repositories/notification_repository.dart';
 import 'ui/features/notification/view_models/notification_view_model.dart';
+import 'ui/features/payment/view_models/payment_view_model.dart';
+import 'ui/features/rating/view_models/rating_view_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,6 +88,18 @@ void main() async {
         ChangeNotifierProvider<NotificationViewModel>(
           create: (_) => NotificationViewModel(
             notificationRepository: notificationRepository,
+            authRepository: authRepository,
+          ),
+        ),
+        ChangeNotifierProvider<PaymentViewModel>(
+          create: (_) => PaymentViewModel(
+            authRepository: authRepository,
+            orderRepository: orderRepository,
+          ),
+        ),
+        ChangeNotifierProvider<RatingViewModel>(
+          create: (_) => RatingViewModel(
+            ratingRepository: ratingRepository,
             authRepository: authRepository,
           ),
         ),
