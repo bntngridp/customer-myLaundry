@@ -730,79 +730,93 @@ class _OrderBottomSheetState extends State<OrderBottomSheet> {
               const SizedBox(height: 20),
 
               // 3. Services Row Selector
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: viewModel.services.map((srv) {
-                  final isSelected = viewModel.selectedService?.id == srv.id;
-                  Color color = const Color(0xFFEAB308); // Cuci Lipat Yellow
-                  IconData icon = Icons.dry_cleaning;
-                  if (srv.title.toLowerCase().contains('iron')) {
-                    color = const Color(0xFF38BDF8); // Cuci Setrika Blue
-                    icon = Icons.iron;
-                  } else if (srv.title.toLowerCase().contains('jacket') || srv.title.toLowerCase().contains('clean')) {
-                    color = const Color(0xFF22C55E); // Cuci Satuan Green
-                    icon = Icons.layers;
-                  }
+              if (viewModel.services.isEmpty && viewModel.isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.0),
+                    child: CircularProgressIndicator(color: Color(0xFF0007B0), strokeWidth: 2),
+                  ),
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: viewModel.services.map((srv) {
+                    final isSelected = viewModel.selectedService?.id == srv.id;
+                    Color color = const Color(0xFFEAB308); // Yellow
+                    IconData icon = Icons.dry_cleaning;
+                    if (srv.title.toLowerCase().contains('iron')) {
+                      color = const Color(0xFF38BDF8); // Blue
+                      icon = Icons.iron;
+                    } else if (srv.title.toLowerCase().contains('jacket') || srv.title.toLowerCase().contains('clean') || srv.title.toLowerCase().contains('express')) {
+                      color = const Color(0xFF22C55E); // Green
+                      icon = Icons.bolt;
+                    }
 
-                  return GestureDetector(
-                    onTap: () => viewModel.selectService(srv),
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isSelected ? color : color.withValues(alpha: 0.1),
-                                border: Border.all(
-                                  color: isSelected ? Colors.white : Colors.transparent,
-                                  width: 3,
+                    return GestureDetector(
+                      onTap: () => viewModel.selectService(srv),
+                      child: Column(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isSelected ? color : color.withValues(alpha: 0.1),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.white : Colors.transparent,
+                                    width: 3,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: color.withValues(alpha: 0.4),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ]
+                                      : [],
                                 ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: color.withValues(alpha: 0.4),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        )
-                                      ]
-                                    : [],
+                                child: Icon(
+                                  icon,
+                                  color: isSelected ? Colors.white : color,
+                                  size: 24,
+                                ),
                               ),
-                              child: Icon(
-                                icon,
-                                color: isSelected ? Colors.white : color,
-                                size: 24,
+                              if (isSelected)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                    padding: const EdgeInsets.all(2),
+                                    child: Icon(Icons.check_circle, color: color, size: 16),
+                                  ),
+                                )
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              srv.title,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? color : Colors.black54,
                               ),
                             ),
-                            if (isSelected)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Container(
-                                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                  padding: const EdgeInsets.all(2),
-                                  child: Icon(Icons.check_circle, color: color, size: 16),
-                                ),
-                              )
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          srv.title.split(' ').take(2).join(' '),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? color : Colors.black54,
-                          ),
-                        )
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+                          )
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
               const SizedBox(height: 24),
 
               // 4. Flexible Item tags selection grid (Preset + Custom Input)

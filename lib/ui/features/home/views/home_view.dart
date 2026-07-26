@@ -5,6 +5,7 @@ import '../../auth/view_models/auth_view_model.dart';
 import '../../profile/views/profile_view.dart';
 import '../../profile/views/promo_list_view.dart';
 import '../view_models/home_view_model.dart';
+import '../view_models/order_view_model.dart';
 import 'closest_branches_view.dart';
 import 'order_bottom_sheet.dart';
 import 'active_order_view.dart';
@@ -625,6 +626,9 @@ class HomeView extends StatelessWidget {
 
                   return GestureDetector(
                     onTap: () {
+                      final orderViewModel = Provider.of<OrderViewModel>(context, listen: false);
+                      orderViewModel.selectServiceByTitle(s['label'] as String);
+
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
