@@ -133,17 +133,16 @@ class _ReturnDeliveryViewState extends State<ReturnDeliveryView> {
                     children: [
                       Row(
                         children: [
-                          // Surwanto avatar image
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: NetworkImage(
-                                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
-                                ),
-                                fit: BoxFit.cover,
+                          // Kurir avatar (initial-based, no external image)
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: const Color(0xFF0007B0),
+                            child: const Text(
+                              'K',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
                               ),
                             ),
                           ),

@@ -55,11 +55,27 @@ class ClosestBranchesView extends StatelessWidget {
                     children: [
                       Container(
                         height: 160,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(23)),
-                          image: DecorationImage(
-                            image: NetworkImage(branch.imageUrl),
-                            fit: BoxFit.cover,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(23)),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Image.network(
+                          branch.imageUrl,
+                          width: double.infinity,
+                          height: 160,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            height: 160,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF0007B0), Color(0xFF2563EB)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.local_laundry_service, color: Colors.white, size: 48),
+                            ),
                           ),
                         ),
                       ),

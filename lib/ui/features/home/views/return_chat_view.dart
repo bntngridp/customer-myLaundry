@@ -137,10 +137,12 @@ class _ReturnChatViewState extends State<ReturnChatView> {
         title: const Row(
           children: [
             CircleAvatar(
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
-              ),
               radius: 18,
+              backgroundColor: Color(0xFF0007B0),
+              child: Text(
+                'K',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
             ),
             SizedBox(width: 12),
             Column(

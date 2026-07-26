@@ -181,8 +181,14 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                     children: [
                       const CircleAvatar(
                         radius: 24,
-                        backgroundImage: NetworkImage(
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+                        backgroundColor: Color(0xFF0007B0),
+                        child: Text(
+                          'K',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
