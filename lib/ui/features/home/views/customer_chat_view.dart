@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/services/chat_service.dart';
@@ -26,6 +29,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
+  final ImagePicker _picker = ImagePicker();
 
   List<ChatMessageModel> _messages = [];
   bool _isLoadingMessages = true;
@@ -127,6 +131,156 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         );
       }
     }
+  }
+
+  Future<void> _pickAndSendMedia(ImageSource source, {bool isVideo = false}) async {
+    final authRepo = Provider.of<AuthRepository>(context, listen: false);
+    final token = authRepo.token;
+    if (token == null || widget.orderId == 0) return;
+
+    try {
+      XFile? file;
+      if (isVideo) {
+        file = await _picker.pickVideo(source: source);
+      } else {
+        file = await _picker.pickImage(source: source, imageQuality: 70);
+      }
+
+      if (file == null || !mounted) return;
+
+      setState(() {
+        _isSending = true;
+      });
+
+      final bytes = await file.readAsBytes();
+      final mimeType = isVideo ? 'video/mp4' : 'image/jpeg';
+      final base64Data = 'data:$mimeType;base64,${base64Encode(bytes)}';
+
+      final msgType = isVideo ? 'VIDEO' : 'IMAGE';
+      final captionText = isVideo ? '📹 Video Pesanan' : '📷 Foto Pesanan';
+
+      final newMsg = await _chatService.sendChatMessage(
+        orderId: widget.orderId,
+        message: captionText,
+        imageUrl: base64Data,
+        messageType: msgType,
+        token: token,
+      );
+
+      if (mounted) {
+        setState(() {
+          _messages.add(newMsg);
+          _isSending = false;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengirim media: $e')),
+        );
+      }
+    }
+  }
+
+  void _showMediaPickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Kirim Lampiran Media',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0B1739)),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildMediaOptionItem(
+                      icon: Icons.camera_alt_rounded,
+                      color: const Color(0xFF2563EB),
+                      label: 'Foto Kamera',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickAndSendMedia(ImageSource.camera);
+                      },
+                    ),
+                    _buildMediaOptionItem(
+                      icon: Icons.photo_library_rounded,
+                      color: const Color(0xFF10B981),
+                      label: 'Foto Galeri',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickAndSendMedia(ImageSource.gallery);
+                      },
+                    ),
+                    _buildMediaOptionItem(
+                      icon: Icons.videocam_rounded,
+                      color: const Color(0xFF8B5CF6),
+                      label: 'Video',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickAndSendMedia(ImageSource.gallery, isVideo: true);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMediaOptionItem({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF0B1739)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _startRecording() {
@@ -266,16 +420,16 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.black26),
+                              const Icon(Icons.chat_bubble_outline, size: 48, color: Colors.black26),
                               const SizedBox(height: 12),
-                              Text(
+                              const Text(
                                 'Belum ada pesan.',
                                 style: TextStyle(color: Colors.black45, fontSize: 14),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 'Kirim pesan ke $name',
-                                style: TextStyle(color: Colors.black38, fontSize: 12),
+                                style: const TextStyle(color: Colors.black38, fontSize: 12),
                               ),
                             ],
                           ),
@@ -289,6 +443,10 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                             final isMe = (msg.senderRole == 'customer') ||
                                 (currentUserId != null && msg.senderId == currentUserId);
                             final isAudio = msg.message.contains('🎙️ Pesan Suara');
+                            final isImage = msg.messageType == 'IMAGE' ||
+                                msg.messageType == 'DELIVERY_PROOF' ||
+                                (msg.imageUrl.startsWith('data:image') || msg.imageUrl.startsWith('http'));
+                            final isVideo = msg.messageType == 'VIDEO' || msg.imageUrl.startsWith('data:video');
 
                             return Align(
                               alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -297,7 +455,9 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                                 constraints: BoxConstraints(
                                   maxWidth: MediaQuery.of(context).size.width * 0.78,
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: isImage || isVideo
+                                    ? const EdgeInsets.all(6)
+                                    : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isMe ? const Color(0xFF0007B0) : Colors.white,
                                   borderRadius: BorderRadius.only(
@@ -310,27 +470,31 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                                 ),
                                 child: isAudio
                                     ? _buildAudioBubble(msg, index, isMe)
-                                    : Column(
-                                        crossAxisAlignment:
-                                            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            msg.message,
-                                            style: TextStyle(
-                                              color: isMe ? Colors.white : const Color(0xFF0B1739),
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _formatTime(msg.sentAt),
-                                            style: TextStyle(
-                                              color: isMe ? Colors.white70 : Colors.black38,
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    : isImage
+                                        ? _buildImageBubble(msg, isMe)
+                                        : isVideo
+                                            ? _buildVideoBubble(msg, isMe)
+                                            : Column(
+                                                crossAxisAlignment:
+                                                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    msg.message,
+                                                    style: TextStyle(
+                                                      color: isMe ? Colors.white : const Color(0xFF0B1739),
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    _formatTime(msg.sentAt),
+                                                    style: TextStyle(
+                                                      color: isMe ? Colors.white70 : Colors.black38,
+                                                      fontSize: 10,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                               ),
                             );
                           },
@@ -339,13 +503,124 @@ class _CustomerChatViewState extends State<CustomerChatView> {
 
             // Message Input bar
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               color: Colors.white,
               child: _isRecording ? _buildRecordingBar() : _buildStandardInputBar(),
             )
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImageBubble(ChatMessageModel message, bool isMe) {
+    Widget imageWidget;
+    if (message.imageUrl.startsWith('data:image')) {
+      try {
+        final base64Str = message.imageUrl.split(',').last;
+        final Uint8List bytes = base64Decode(base64Str);
+        imageWidget = Image.memory(bytes, fit: BoxFit.cover);
+      } catch (_) {
+        imageWidget = const Icon(Icons.broken_image, size: 48, color: Colors.grey);
+      }
+    } else if (message.imageUrl.startsWith('http')) {
+      imageWidget = Image.network(message.imageUrl, fit: BoxFit.cover);
+    } else {
+      imageWidget = Container(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: const [
+            Icon(Icons.image, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Foto Pesanan', style: TextStyle(color: Colors.white, fontSize: 13)),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 220),
+            width: double.infinity,
+            child: imageWidget,
+          ),
+        ),
+        if (message.message.isNotEmpty && !message.message.startsWith('📷 Foto'))
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 6, right: 6),
+            child: Text(
+              message.message,
+              style: TextStyle(
+                color: isMe ? Colors.white : const Color(0xFF0B1739),
+                fontSize: 13,
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, right: 6, left: 6),
+          child: Text(
+            _formatTime(message.sentAt),
+            style: TextStyle(
+              color: isMe ? Colors.white70 : Colors.black38,
+              fontSize: 10,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVideoBubble(ChatMessageModel message, bool isMe) {
+    return Column(
+      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 140,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(Icons.play_circle_fill_rounded, size: 48, color: Colors.white70),
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.videocam, color: Colors.white, size: 14),
+                      SizedBox(width: 4),
+                      Text('Video Pesanan', style: TextStyle(color: Colors.white, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, right: 6, left: 6),
+          child: Text(
+            _formatTime(message.sentAt),
+            style: TextStyle(
+              color: isMe ? Colors.white70 : Colors.black38,
+              fontSize: 10,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -481,12 +756,18 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   Widget _buildStandardInputBar() {
     return Row(
       children: [
+        IconButton(
+          icon: const Icon(Icons.add_photo_alternate_rounded, color: Color(0xFF0007B0), size: 26),
+          onPressed: _showMediaPickerOptions,
+          tooltip: 'Kirim Gambar/Video',
+        ),
+        const SizedBox(width: 4),
         Expanded(
           child: TextField(
             controller: _messageController,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Ketik pesan atau rekam suara...',
+              hintText: 'Ketik pesan...',
               hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
               filled: true,
               fillColor: const Color(0xFFF8F9FA),
@@ -506,7 +787,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
             onSubmitted: (_) => _sendMessage(),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         GestureDetector(
           onTap: _sendMessage,
           child: CircleAvatar(
