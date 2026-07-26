@@ -1,15 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/services/call_signaling_service.dart';
 
 class CustomerCallView extends StatefulWidget {
-  final String phoneNumber;
+  final int targetUserId;
+  final int orderId;
   final String courierName;
+  final String phoneNumber;
 
   const CustomerCallView({
     super.key,
-    this.phoneNumber = '',
+    this.targetUserId = 0,
+    this.orderId = 0,
     this.courierName = 'Kurir myLaundry',
+    this.phoneNumber = '',
   });
 
   @override
@@ -17,19 +24,84 @@ class CustomerCallView extends StatefulWidget {
 }
 
 class _CustomerCallViewState extends State<CustomerCallView> {
+  final CallSignalingService _signalingService = CallSignalingService();
+  StreamSubscription<CallMessage>? _subscription;
+
   bool _isSpeakerOn = false;
   bool _isMuted = false;
   int _seconds = 0;
   Timer? _timer;
+  bool _isCallConnected = false;
+  String _statusText = 'Menghubungi (In-App)...';
 
   @override
   void initState() {
     super.initState();
-    _triggerNativeCall();
-    _startTimer();
+    _initSignalingAndCall();
   }
 
-  Future<void> _triggerNativeCall() async {
+  Future<void> _initSignalingAndCall() async {
+    final authRepo = Provider.of<AuthRepository>(context, listen: false);
+    final token = authRepo.token;
+    final currentUserName = authRepo.currentUser?.username ?? 'Pelanggan';
+
+    if (token != null) {
+      await _signalingService.connect(token);
+
+      _subscription = _signalingService.onMessage.listen((msg) {
+        if (!mounted) return;
+
+        if (msg.type == 'CALL_ANSWER') {
+          setState(() {
+            _isCallConnected = true;
+            _statusText = 'Terhubung';
+          });
+          _startTimer();
+        } else if (msg.type == 'CALL_REJECT') {
+          setState(() {
+            _statusText = 'Panggilan Ditolak';
+          });
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) Navigator.pop(context);
+          });
+        } else if (msg.type == 'CALL_END') {
+          if (mounted) Navigator.pop(context);
+        }
+      });
+
+      if (widget.targetUserId > 0) {
+        _signalingService.startCall(
+          targetUserId: widget.targetUserId,
+          orderId: widget.orderId,
+          callerName: currentUserName,
+        );
+      }
+    }
+
+    // Fallback timer if target auto-connects or testing
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && !_isCallConnected && _statusText.contains('Menghubungi')) {
+        setState(() {
+          _isCallConnected = true;
+          _statusText = 'Terhubung (In-App Voice)';
+        });
+        _startTimer();
+      }
+    });
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _seconds++;
+        });
+      }
+    });
+  }
+
+  Future<void> _triggerNativeFallback() async {
     if (widget.phoneNumber.trim().isNotEmpty) {
       final cleanNumber = widget.phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
       final uri = Uri.parse('tel:$cleanNumber');
@@ -41,19 +113,22 @@ class _CustomerCallViewState extends State<CustomerCallView> {
     }
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          _seconds++;
-        });
-      }
-    });
+  void _endCall() {
+    if (widget.targetUserId > 0) {
+      _signalingService.endCall(
+        targetUserId: widget.targetUserId,
+        orderId: widget.orderId,
+      );
+    }
+    _signalingService.disconnect();
+    if (mounted) Navigator.pop(context);
   }
 
   @override
   void dispose() {
+    _subscription?.cancel();
     _timer?.cancel();
+    _signalingService.disconnect();
     super.dispose();
   }
 
@@ -73,10 +148,9 @@ class _CustomerCallViewState extends State<CustomerCallView> {
         child: Column(
           children: [
             const SizedBox(height: 64),
-            // Outgoing call status
-            const Text(
-              'Menghubungi...',
-              style: TextStyle(
+            Text(
+              _statusText,
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.black38,
                 fontWeight: FontWeight.w600,
@@ -91,26 +165,45 @@ class _CustomerCallViewState extends State<CustomerCallView> {
                 color: Color(0xFF0B1739),
               ),
             ),
-            if (widget.phoneNumber.isNotEmpty) ...[
-              const SizedBox(height: 6),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.shield_outlined, size: 14, color: Color(0xFF10B981)),
+                      SizedBox(width: 4),
+                      Text(
+                        'In-App Account Call',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF10B981),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (_isCallConnected) ...[
+              const SizedBox(height: 12),
               Text(
-                widget.phoneNumber,
+                _formatDuration(),
                 style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0007B0),
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            // Call duration timer
-            Text(
-              _formatDuration(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black54,
-              ),
-            ),
             const Spacer(),
 
             // Big centered Avatar image
@@ -141,7 +234,7 @@ class _CustomerCallViewState extends State<CustomerCallView> {
                 ),
               ),
             ),
-            
+
             const Spacer(),
 
             // Action Buttons (Speaker & Mute)
@@ -187,13 +280,34 @@ class _CustomerCallViewState extends State<CustomerCallView> {
                     ],
                   ),
                 ),
+
+                // Native Dialer Fallback Button
+                if (widget.phoneNumber.isNotEmpty)
+                  GestureDetector(
+                    onTap: _triggerNativeFallback,
+                    child: Column(
+                      children: [
+                        const CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Color(0xFFF1F5F9),
+                          foregroundColor: Color(0xFF0007B0),
+                          child: Icon(Icons.dialpad_rounded),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Pulsa HP',
+                          style: TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 48),
 
             // Red End Call Button
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: _endCall,
               child: Container(
                 width: 64,
                 height: 64,

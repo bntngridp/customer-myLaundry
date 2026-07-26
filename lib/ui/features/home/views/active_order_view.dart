@@ -281,6 +281,8 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => CustomerCallView(
+                                targetUserId: activeOrder?.courier?.id ?? 0,
+                                orderId: activeOrder?.id ?? 0,
                                 phoneNumber: activeOrder?.courier?.phoneNumber ?? '',
                                 courierName: activeOrder?.courier?.username ?? 'Kurir myLaundry',
                               ),
