@@ -22,7 +22,7 @@ class AuthService {
 
   AuthService({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<http.Response> login(String email, String password) async {
+  Future<http.Response> login(String email, String password, {String role = 'customer'}) async {
     final url = Uri.parse('$baseUrl/auth/login');
     return await _client.post(
       url,
@@ -30,6 +30,7 @@ class AuthService {
       body: jsonEncode({
         'email': email,
         'password': password,
+        'role': role,
       }),
     );
   }
