@@ -40,6 +40,42 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   int _recordSeconds = 0;
   Timer? _recordTimer;
   int? _playingIndex;
+  Timer? _audioPlaybackTimer;
+  int _audioPlaybackProgress = 0;
+
+  void _toggleAudioPlayback(int index) {
+    if (_playingIndex == index) {
+      _audioPlaybackTimer?.cancel();
+      setState(() {
+        _playingIndex = null;
+        _audioPlaybackProgress = 0;
+      });
+    } else {
+      _audioPlaybackTimer?.cancel();
+      setState(() {
+        _playingIndex = index;
+        _audioPlaybackProgress = 0;
+      });
+      _audioPlaybackTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+        if (mounted && _playingIndex == index) {
+          setState(() {
+            _audioPlaybackProgress++;
+          });
+          if (_audioPlaybackProgress >= 8) {
+            _audioPlaybackTimer?.cancel();
+            if (mounted) {
+              setState(() {
+                _playingIndex = null;
+                _audioPlaybackProgress = 0;
+              });
+            }
+          }
+        } else {
+          timer.cancel();
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -314,6 +350,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
       final newMsg = await _chatService.sendChatMessage(
         orderId: widget.orderId,
         message: '🎙️ Pesan Suara ($durationStr)',
+        messageType: 'AUDIO',
         token: token,
       );
       if (mounted) {
@@ -350,6 +387,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   void dispose() {
     _pollTimer?.cancel();
     _recordTimer?.cancel();
+    _audioPlaybackTimer?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -633,18 +671,10 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (_playingIndex == index) {
-                    _playingIndex = null;
-                  } else {
-                    _playingIndex = index;
-                  }
-                });
-              },
+              onTap: () => _toggleAudioPlayback(index),
               child: Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isMe ? Colors.white : const Color(0xFF0007B0),
@@ -652,18 +682,41 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                 child: Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   color: isMe ? const Color(0xFF0007B0) : Colors.white,
-                  size: 22,
+                  size: 24,
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              msg.message,
-              style: TextStyle(
-                color: isMe ? Colors.white : const Color(0xFF0B1739),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  msg.message,
+                  style: TextStyle(
+                    color: isMe ? Colors.white : const Color(0xFF0B1739),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: List.generate(10, (i) {
+                    final isActive = isPlaying && (i <= (_audioPlaybackProgress % 10));
+                    final h = (i % 3 == 0) ? 14.0 : ((i % 2 == 0) ? 20.0 : 10.0);
+                    return Container(
+                      width: 3,
+                      height: h,
+                      margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                      decoration: BoxDecoration(
+                        color: isMe
+                            ? (isActive ? Colors.greenAccent : Colors.white70)
+                            : (isActive ? const Color(0xFF0007B0) : Colors.black26),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    );
+                  }),
+                ),
+              ],
             ),
           ],
         ),
@@ -671,7 +724,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         Text(
           _formatTime(msg.sentAt),
           style: TextStyle(
-            color: isMe ? Colors.white60 : Colors.black38,
+            color: isMe ? Colors.white70 : Colors.black38,
             fontSize: 10,
           ),
         ),
@@ -805,6 +858,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
               context,
               MaterialPageRoute(
                 builder: (context) => CustomerCallView(
+                  orderId: widget.orderId,
                   phoneNumber: widget.phoneNumber,
                   courierName: widget.courierName,
                 ),
