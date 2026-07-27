@@ -103,13 +103,16 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         token: token,
       );
       if (mounted) {
+        final bool isFirstLoad = _messages.isEmpty && fetched.isNotEmpty;
         final bool hadNew = fetched.length > _messages.length;
         setState(() {
           _messages = fetched;
           _isLoadingMessages = false;
         });
-        if (hadNew) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        if (isFirstLoad) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(force: true, immediate: true));
+        } else if (hadNew) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(force: false));
         }
       }
     } catch (_) {
@@ -121,13 +124,25 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     }
   }
 
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+  bool _isNearBottom() {
+    if (!_scrollController.hasClients) return true;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    return (maxScroll - currentScroll) <= 120.0;
+  }
+
+  void _scrollToBottom({bool force = false, bool immediate = false}) {
+    if (!_scrollController.hasClients) return;
+    if (force || _isNearBottom()) {
+      if (immediate) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      } else {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
+      }
     }
   }
 
@@ -155,7 +170,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           _messages.add(newMsg);
           _isSending = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(force: true));
       }
     } catch (e) {
       if (mounted) {
@@ -208,7 +223,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           _messages.add(newMsg);
           _isSending = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(force: true));
       }
     } catch (e) {
       if (mounted) {
