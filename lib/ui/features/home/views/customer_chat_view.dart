@@ -29,13 +29,13 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   final TextEditingController _messageController = TextEditingController();
   final FocusNode _messageFocusNode = FocusNode();
   final ValueNotifier<bool> _hasTextNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _isSendingNotifier = ValueNotifier<bool>(false);
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
   final ImagePicker _picker = ImagePicker();
 
   List<ChatMessageModel> _messages = [];
   bool _isLoadingMessages = true;
-  bool _isSending = false;
   Timer? _pollTimer;
 
   bool _isRecording = false;
@@ -184,15 +184,14 @@ class _CustomerChatViewState extends State<CustomerChatView> {
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty || _isSending) return;
+    if (text.isEmpty || _isSendingNotifier.value) return;
 
     final authRepo = Provider.of<AuthRepository>(context, listen: false);
     final token = authRepo.token;
     if (token == null || widget.orderId == 0) return;
 
-    setState(() {
-      _isSending = true;
-    });
+    _isSendingNotifier.value = true;
+    _messageController.clear();
 
     try {
       final newMsg = await _chatService.sendChatMessage(
@@ -200,19 +199,20 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         message: text,
         token: token,
       );
-      _messageController.clear();
       if (mounted) {
         setState(() {
           _messages.add(newMsg);
-          _isSending = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(force: true));
+        _isSendingNotifier.value = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 60), () {
+            _scrollToBottom(force: true);
+          });
+        });
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
+        _isSendingNotifier.value = false;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
@@ -235,9 +235,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
 
       if (file == null || !mounted) return;
 
-      setState(() {
-        _isSending = true;
-      });
+      _isSendingNotifier.value = true;
 
       final bytes = await file.readAsBytes();
       final mimeType = isVideo ? 'video/mp4' : 'image/jpeg';
@@ -257,17 +255,19 @@ class _CustomerChatViewState extends State<CustomerChatView> {
       if (mounted) {
         setState(() {
           _messages.add(newMsg);
-          _isSending = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(force: true));
+        _isSendingNotifier.value = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 60), () {
+            _scrollToBottom(force: true);
+          });
+        });
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
+        _isSendingNotifier.value = false;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengirim media: $e')),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
       }
     }
@@ -442,6 +442,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     _messageController.dispose();
     _messageFocusNode.dispose();
     _hasTextNotifier.dispose();
+    _isSendingNotifier.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -905,9 +906,14 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           child: CircleAvatar(
             backgroundColor: const Color(0xFFE6F0FF),
             foregroundColor: const Color(0xFF0007B0),
-            child: _isSending
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.send, size: 18),
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _isSendingNotifier,
+              builder: (context, isSending, _) {
+                return isSending
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.send, size: 18);
+              },
+            ),
           ),
         ),
         const SizedBox(width: 8),
