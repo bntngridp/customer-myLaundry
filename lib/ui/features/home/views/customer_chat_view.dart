@@ -27,6 +27,8 @@ class CustomerChatView extends StatefulWidget {
 
 class _CustomerChatViewState extends State<CustomerChatView> {
   final TextEditingController _messageController = TextEditingController();
+  final FocusNode _messageFocusNode = FocusNode();
+  final ValueNotifier<bool> _hasTextNotifier = ValueNotifier<bool>(false);
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
   final ImagePicker _picker = ImagePicker();
@@ -83,6 +85,21 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     _fetchMessages();
     // Poll for new chat messages every 3 seconds
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchMessages(silent: true));
+
+    _messageController.addListener(() {
+      final hasText = _messageController.text.trim().isNotEmpty;
+      if (_hasTextNotifier.value != hasText) {
+        _hasTextNotifier.value = hasText;
+      }
+    });
+
+    _messageFocusNode.addListener(() {
+      if (_messageFocusNode.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 250), () {
+          _scrollToBottom(force: true);
+        });
+      }
+    });
   }
 
   bool _areMessagesEqual(List<ChatMessageModel> a, List<ChatMessageModel> b) {
@@ -423,6 +440,8 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     _recordTimer?.cancel();
     _audioPlaybackTimer?.cancel();
     _messageController.dispose();
+    _messageFocusNode.dispose();
+    _hasTextNotifier.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -853,7 +872,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         Expanded(
           child: TextField(
             controller: _messageController,
-            onChanged: (_) => setState(() {}),
+            focusNode: _messageFocusNode,
             decoration: InputDecoration(
               hintText: 'Ketik pesan...',
               hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
@@ -864,13 +883,18 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                 borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide.none,
               ),
-              suffixIcon: _messageController.text.trim().isEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.mic_rounded, color: Color(0xFF0007B0), size: 22),
-                      onPressed: _startRecording,
-                      tooltip: 'Rekam Suara',
-                    )
-                  : null,
+              suffixIcon: ValueListenableBuilder<bool>(
+                valueListenable: _hasTextNotifier,
+                builder: (context, hasText, _) {
+                  return !hasText
+                      ? IconButton(
+                          icon: const Icon(Icons.mic_rounded, color: Color(0xFF0007B0), size: 22),
+                          onPressed: _startRecording,
+                          tooltip: 'Rekam Suara',
+                        )
+                      : const SizedBox.shrink();
+                },
+              ),
             ),
             onSubmitted: (_) => _sendMessage(),
           ),
