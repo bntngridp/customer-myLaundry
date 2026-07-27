@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:record/record.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/services/chat_service.dart';
 import '../../../../domain/models/chat_message.dart';
@@ -30,6 +32,8 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   final FocusNode _messageFocusNode = FocusNode();
   final ValueNotifier<bool> _hasTextNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<bool> _isSendingNotifier = ValueNotifier<bool>(false);
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
   final ImagePicker _picker = ImagePicker();
@@ -45,26 +49,46 @@ class _CustomerChatViewState extends State<CustomerChatView> {
   Timer? _audioPlaybackTimer;
   int _audioPlaybackProgress = 0;
 
-  void _toggleAudioPlayback(int index) {
+  Future<void> _toggleAudioPlayback(int index, ChatMessageModel msg) async {
     if (_playingIndex == index) {
+      try {
+        await _audioPlayer.stop();
+      } catch (_) {}
       _audioPlaybackTimer?.cancel();
-      setState(() {
-        _playingIndex = null;
-        _audioPlaybackProgress = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _playingIndex = null;
+          _audioPlaybackProgress = 0;
+        });
+      }
     } else {
+      try {
+        await _audioPlayer.stop();
+      } catch (_) {}
       _audioPlaybackTimer?.cancel();
-      setState(() {
-        _playingIndex = index;
-        _audioPlaybackProgress = 0;
-      });
-      _audioPlaybackTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {
+          _playingIndex = index;
+          _audioPlaybackProgress = 0;
+        });
+      }
+
+      if (msg.imageUrl.isNotEmpty && (msg.imageUrl.startsWith('data:audio') || msg.imageUrl.startsWith('http'))) {
+        try {
+          await _audioPlayer.play(UrlSource(msg.imageUrl));
+        } catch (_) {}
+      }
+
+      _audioPlaybackTimer = Timer.periodic(const Duration(milliseconds: 400), (timer) {
         if (mounted && _playingIndex == index) {
           setState(() {
             _audioPlaybackProgress++;
           });
-          if (_audioPlaybackProgress >= 8) {
+          if (_audioPlaybackProgress >= 12) {
             _audioPlaybackTimer?.cancel();
+            try {
+              _audioPlayer.stop();
+            } catch (_) {}
             if (mounted) {
               setState(() {
                 _playingIndex = null;
@@ -370,19 +394,39 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     );
   }
 
-  void _startRecording() {
-    setState(() {
-      _isRecording = true;
-      _recordSeconds = 0;
-    });
-    _recordTimer?.cancel();
-    _recordTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (mounted) {
+  Future<void> _startRecording() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        await _audioRecorder.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc),
+          path: '',
+        );
         setState(() {
-          _recordSeconds++;
+          _isRecording = true;
+          _recordSeconds = 0;
         });
+        _recordTimer?.cancel();
+        _recordTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+          if (mounted) {
+            setState(() {
+              _recordSeconds++;
+            });
+          }
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Izin mikrofon diperlukan untuk merekam suara.')),
+          );
+        }
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memulai perekaman: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _stopAndSendRecording() async {
@@ -398,23 +442,47 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     if (token == null || widget.orderId == 0) return;
 
     try {
+      final path = await _audioRecorder.stop();
+      if (path == null) return;
+
+      _isSendingNotifier.value = true;
+      final bytes = await XFile(path).readAsBytes();
+      final base64Audio = 'data:audio/aac;base64,${base64Encode(bytes)}';
+
       final newMsg = await _chatService.sendChatMessage(
         orderId: widget.orderId,
         message: '🎙️ Pesan Suara ($durationStr)',
+        imageUrl: base64Audio,
         messageType: 'AUDIO',
         token: token,
       );
+
       if (mounted) {
         setState(() {
           _messages.add(newMsg);
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        _isSendingNotifier.value = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 60), () {
+            _scrollToBottom(force: true);
+          });
+        });
       }
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        _isSendingNotifier.value = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengirim pesan suara: $e')),
+        );
+      }
+    }
   }
 
-  void _cancelRecording() {
+  Future<void> _cancelRecording() async {
     _recordTimer?.cancel();
+    try {
+      await _audioRecorder.stop();
+    } catch (_) {}
     setState(() {
       _isRecording = false;
       _recordSeconds = 0;
@@ -439,6 +507,10 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     _pollTimer?.cancel();
     _recordTimer?.cancel();
     _audioPlaybackTimer?.cancel();
+    try {
+      _audioRecorder.dispose();
+      _audioPlayer.dispose();
+    } catch (_) {}
     _messageController.dispose();
     _messageFocusNode.dispose();
     _hasTextNotifier.dispose();
@@ -726,7 +798,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: () => _toggleAudioPlayback(index),
+              onTap: () => _toggleAudioPlayback(index, msg),
               child: Container(
                 width: 38,
                 height: 38,
