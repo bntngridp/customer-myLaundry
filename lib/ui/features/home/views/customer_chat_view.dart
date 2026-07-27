@@ -85,6 +85,16 @@ class _CustomerChatViewState extends State<CustomerChatView> {
     _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchMessages(silent: true));
   }
 
+  bool _areMessagesEqual(List<ChatMessageModel> a, List<ChatMessageModel> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].message != b[i].message || a[i].imageUrl != b[i].imageUrl) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   Future<void> _fetchMessages({bool silent = false}) async {
     final authRepo = Provider.of<AuthRepository>(context, listen: false);
     final token = authRepo.token;
@@ -103,6 +113,15 @@ class _CustomerChatViewState extends State<CustomerChatView> {
         token: token,
       );
       if (mounted) {
+        if (_areMessagesEqual(_messages, fetched)) {
+          if (_isLoadingMessages) {
+            setState(() {
+              _isLoadingMessages = false;
+            });
+          }
+          return;
+        }
+
         final bool isFirstLoad = _messages.isEmpty && fetched.isNotEmpty;
         final bool hadNew = fetched.length > _messages.length;
         setState(() {
@@ -502,6 +521,7 @@ class _CustomerChatViewState extends State<CustomerChatView> {
                             final isVideo = msg.messageType == 'VIDEO' || msg.imageUrl.startsWith('data:video');
 
                             return Align(
+                              key: ValueKey('customer_chat_msg_${msg.id}_$index'),
                               alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                               child: Container(
                                 margin: const EdgeInsets.only(bottom: 12),
