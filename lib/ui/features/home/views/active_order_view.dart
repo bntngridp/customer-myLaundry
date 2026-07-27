@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -53,28 +54,42 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
     ),
   };
 
+  Timer? _statusPollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _statusPollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) {
+        Provider.of<HomeViewModel>(context, listen: false).fetchActiveOrder(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusPollTimer?.cancel();
+    super.dispose();
+  }
+
   int _getStepIndex(String status) {
-    switch (status.toLowerCase()) {
-      case 'waiting for courier approval':
-      case 'pending':
-        return 0;
-      case 'courier_assigned':
-      case 'picked_up':
-      case 'pickup':
-        return 1;
-      case 'processing':
-      case 'washing':
-      case 'ironing':
-        return 2;
-      case 'delivering':
-      case 'out_for_delivery':
-        return 3;
-      case 'completed':
-      case 'done':
-        return 4;
-      default:
-        return 1;
+    final s = status.toLowerCase();
+    if (s.contains('waiting for courier') || s.contains('pending') || s.contains('menunggu')) {
+      return 0;
     }
+    if (s.contains('on the way') || s.contains('assigned') || s.contains('diambil') || s.contains('pickup')) {
+      return 1;
+    }
+    if (s.contains('arrived') || s.contains('pembayaran') || s.contains('dicuci') || s.contains('processing') || s.contains('washing') || s.contains('timbang')) {
+      return 2;
+    }
+    if (s.contains('delivering') || s.contains('out_for_delivery') || s.contains('pengantaran')) {
+      return 3;
+    }
+    if (s.contains('completed') || s.contains('selesai') || s.contains('done')) {
+      return 4;
+    }
+    return 1;
   }
 
   @override
@@ -166,7 +181,7 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
           ),
 
           // Floating Payment Action if waiting for payment
-          if (status == 'unpaid' || status == 'waiting_payment')
+          if (status.contains('pembayaran') || status.contains('unpaid') || status.contains('arrived') || (activeOrder != null && activeOrder.totalPrice > 0 && status != 'completed'))
             Positioned(
               top: 100,
               left: 24,
@@ -186,19 +201,23 @@ class _ActiveOrderViewState extends State<ActiveOrderView> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.payment, color: Colors.white),
+                    const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 28),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Tagihan Cucian Siap',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                            activeOrder != null && activeOrder.totalPrice > 0
+                                ? 'Tagihan: Rp ${activeOrder.totalPrice.toInt()}'
+                                : 'Tagihan Cucian Siap',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           Text(
-                            'Silakan lakukan pembayaran sekarang',
-                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                            activeOrder != null && activeOrder.weight > 0
+                                ? 'Berat Laundry: ${activeOrder.weight.toStringAsFixed(1).replaceAll('.0', '')} kg • Silakan bayar'
+                                : 'Silakan lakukan pembayaran sekarang',
+                            style: const TextStyle(color: Colors.white70, fontSize: 11),
                           ),
                         ],
                       ),

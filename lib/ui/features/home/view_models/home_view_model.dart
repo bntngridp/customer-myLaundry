@@ -106,12 +106,18 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> checkActiveOrder() async {
+    await fetchActiveOrder(silent: false);
+  }
+
+  Future<void> fetchActiveOrder({bool silent = false}) async {
     final token = authRepository.token;
     if (token == null) return;
 
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    if (!silent) {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+    }
 
     fetchPromos();
 
@@ -124,18 +130,32 @@ class HomeViewModel extends ChangeNotifier {
 
       if (activeList.isNotEmpty) {
         activeList.sort((a, b) => b.id.compareTo(a.id));
-        _activeOrder = activeList.first;
+        final newActive = activeList.first;
+        if (_activeOrder?.id != newActive.id ||
+            _activeOrder?.status != newActive.status ||
+            _activeOrder?.totalPrice != newActive.totalPrice ||
+            _activeOrder?.weight != newActive.weight) {
+          _activeOrder = newActive;
+          notifyListeners();
+        }
       } else {
-        _activeOrder = null;
+        if (_activeOrder != null) {
+          _activeOrder = null;
+          notifyListeners();
+        }
       }
 
-      _isLoading = false;
-      notifyListeners();
+      if (!silent) {
+        _isLoading = false;
+        notifyListeners();
+      }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _isLoading = false;
-      _activeOrder = null;
-      notifyListeners();
+      if (!silent) {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isLoading = false;
+        _activeOrder = null;
+        notifyListeners();
+      }
     }
   }
 
