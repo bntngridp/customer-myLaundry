@@ -91,6 +91,31 @@ class _PaymentViewState extends State<PaymentView> {
                     const SizedBox(height: 24),
                   ],
 
+                  // Error Message Display
+                  if (paymentVm.errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFCA5A5)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              paymentVm.errorMessage!,
+                              style: const TextStyle(fontSize: 13, color: Color(0xFFDC2626)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Action Button
                   SizedBox(
                     width: double.infinity,
@@ -100,14 +125,9 @@ class _PaymentViewState extends State<PaymentView> {
                           ? null
                           : () async {
                               final success = await paymentVm.processPayment(widget.order);
-                              if (success && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(authViewModel.translate('Pembayaran Berhasil! 🎉')),
-                                    backgroundColor: const Color(0xFF059669),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                              if (!success && context.mounted) {
+                                // Error is shown via errorMessage in the UI above
+                                // No need for snackbar as the red card is already visible
                               }
                             },
                       style: ElevatedButton.styleFrom(
@@ -462,7 +482,7 @@ class _PaymentViewState extends State<PaymentView> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Total Rp ${_formatCurrency(totalPrice)} telah terverifikasi.',
+              'Kamu akan diarahkan ke halaman pembayaran Midtrans. Selesaikan pembayaran di sana dan pesananmu akan segera diproses.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
